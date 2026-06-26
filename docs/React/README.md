@@ -1,6 +1,6 @@
 # ⚛️ Documentation React
 
-Cette documentation couvre l'utilisation de React, du niveau débutant aux concepts avancés, en incluant les deux syntaxes majeures : **JSX** (standard) et **TSX** (TypeScript).
+Cette documentation couvre l'utilisation de React, du niveau débutant aux concepts avancés, en incluant les deux syntaxes majeures : **JSX** (standard) et **jsx** (TypeScript).
 
 ---
 
@@ -14,8 +14,8 @@ Cette documentation couvre l'utilisation de React, du niveau débutant aux conce
 - **[04 — Composition](./Docs/tuto_md/04-rendering-et-composition.md)**
 - **[05 — Hooks Intermédiaires](./Docs/tuto_md/05-hooks-intermediaire.md)**
 
-### 🔵 SpécialISATION TypeScript (TSX)
-*Nouveaux guides pour les projets modernes en `.tsx`*
+### 🔵 SpécialISATION TypeScript (jsx)
+*Nouveaux guides pour les projets modernes en `.jsx`*
 - **[TS/01 — Setup TypeScript](./Docs/typescript/01-setup-typescript.md)** : Configuration et Vite.
 - **[TS/02 — Props & Interfaces](./Docs/typescript/02-props-et-types.md)** : Typer les entrées des composants.
 - **[TS/03 — Hooks Typés](./Docs/typescript/03-hooks-typescript.md)** : useState, useRef, useReducer avec TS.

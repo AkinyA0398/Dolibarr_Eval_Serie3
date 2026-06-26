@@ -1,0 +1,26 @@
+J1 - 25 juin 26
+Il faut activer le module “salaire” (terminer)
+
+NewAPP (notre projet react actu) (à faire)
+=> Backoffice ( avec code unique comme mot de passe, pas de login , mettre par defaut sur le formulaire )
+    - il faut protéger les pages du back office
+    - créer une page avec un bouton pour réinitialiser les données
+    - créer la page pour importer les 2 fichiers 
+    - 2 fichiers csv pour le contenu du dossier import
+    - 1 fichier zip pour les images dans le dossier import
+    - Dashboard pour afficher :
+        - le montant de salaire par genre
+        - le montant de salaire par mois ( date de reglement comme reference)
+
+
+=> FrontOffice (à faire)
+    - Créer la page pour afficher la liste des salairés :
+        - avec recherche multi critère
+    - Page pour créer et payer un salaire ( on payer en plusieurs fois)
+
+
+
+ExistingApp (/opt/lampp/htdocs/dolibarr-23.0.3)
+    - s’assurer que :
+        - Toutes les données importées sont visibles quelque part dans le backoffice de DOLIBARR.
+        - Que la modification des données aient un impact sur la NewAPP		

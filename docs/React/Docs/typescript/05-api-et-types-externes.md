@@ -8,7 +8,7 @@ Comment typer les appels réseau pour garantir que les données consommées sont
 
 Prenons l'exemple de l'API PrestaShop XML (convertie en JSON) :
 
-```tsx
+```jsx
 interface PsProduct {
   id: number;
   name: string;
@@ -27,7 +27,7 @@ interface ApiResponse {
 
 ## 📡 Utilisation avec Fetch
 
-```tsx
+```jsx
 const fetchProducts = async (): Promise<PsProduct[]> => {
   const response = await fetch('/api/products');
   const data: ApiResponse = await response.json(); // Casting explicite
@@ -42,7 +42,7 @@ const fetchProducts = async (): Promise<PsProduct[]> => {
 Beaucoup de bibliothèques fournissent leurs propres types.
 
 ### React Router
-```tsx
+```jsx
 import { useParams } from 'react-router-dom';
 
 type RouteParams = {
@@ -56,7 +56,7 @@ const ProductDetails = () => {
 ```
 
 ### Lucide Icons (Composants comme props)
-```tsx
+```jsx
 import { LucideIcon } from 'lucide-react';
 
 interface MenuItem {

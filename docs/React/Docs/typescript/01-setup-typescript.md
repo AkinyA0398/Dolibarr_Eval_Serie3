@@ -1,4 +1,4 @@
-# 🔵 TS/01 — React avec TypeScript (.tsx)
+# 🔵 TS/01 — React avec TypeScript (.jsx)
 
 L'utilisation de TypeScript avec React permet d'identifier les erreurs au moment de la compilation et améliore considérablement l'auto-complétion dans l'IDE.
 
@@ -11,7 +11,7 @@ Pour démarrer un projet React en TypeScript :
 npx create-vite@latest ma-super-app --template react-ts
 ```
 
-Cela génère des fichiers en `.tsx` (pour les composants) et `.ts` (pour les utilitaires).
+Cela génère des fichiers en `.jsx` (pour les composants) et `.ts` (pour les utilitaires).
 
 ---
 
@@ -25,7 +25,7 @@ Ce fichier définit comment TypeScript compile votre code.
 
 ### Extensions de fichiers
 - `.ts` : Fichiers TypeScript purs (utilitaires, classes, types).
-- `.tsx` : Fichiers contenant du JSX (composants React).
+- `.jsx` : Fichiers contenant du JSX (composants React).
 
 ---
 
@@ -47,7 +47,7 @@ import React from 'react';
 
 // Définition d'un composant fonctionnel typé
 const MonComposant: React.FC = () => {
-  return <div>Hello TSX!</div>;
+  return <div>Hello jsx!</div>;
 };
 ```
 

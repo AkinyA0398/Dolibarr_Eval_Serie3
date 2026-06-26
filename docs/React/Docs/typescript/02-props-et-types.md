@@ -7,7 +7,7 @@ C'est l'usage n°1 de TypeScript dans React : définir la structure des données
 ## 📋 Interfaces vs Types
 
 ### Utilisation d'Interface (Recommandé pour les objets)
-```tsx
+```jsx
 interface ButtonProps {
   label: string;
   onClick: () => void;
@@ -30,7 +30,7 @@ const CustomButton: React.FC<ButtonProps> = ({ label, onClick, disabled, variant
 
 Pour les composants qui enveloppent d'autres éléments :
 
-```tsx
+```jsx
 interface CardProps {
   title: string;
   children: React.ReactNode; // Type universel pour les enfants React
@@ -50,7 +50,7 @@ const Card: React.FC<CardProps> = ({ title, children }) => (
 
 Il est pratique de centraliser les types métier (ex: Produits) :
 
-```tsx
+```jsx
 // types/product.ts
 export interface Product {
   id: number;
@@ -59,7 +59,7 @@ export interface Product {
   active: boolean;
 }
 
-// components/ProductItem.tsx
+// components/ProductItem.jsx
 import { Product } from '../types/product';
 
 const ProductItem: React.FC<{ product: Product }> = ({ product }) => (

@@ -7,12 +7,12 @@ Les hooks React sont souvent capables d'inférer le type automatiquement, mais p
 ## 💾 useState
 
 ### Inférence automatique (Simple)
-```tsx
+```jsx
 const [count, setCount] = useState(0); // count est inféré comme 'number'
 ```
 
 ### Typage explicite (Objets ou null)
-```tsx
+```jsx
 import { Product } from '../types';
 
 const [product, setProduct] = useState<Product | null>(null);
@@ -25,7 +25,7 @@ const [items, setItems] = useState<string[]>([]);
 
 Pour les éléments du DOM, il faut spécifier le type d'élément HTML :
 
-```tsx
+```jsx
 const inputRef = useRef<HTMLInputElement>(null);
 
 const focusInput = () => {
@@ -41,7 +41,7 @@ return <input ref={inputRef} />;
 
 C'est là que TypeScript brille vraiment pour éviter les actions invalides.
 
-```tsx
+```jsx
 interface State { count: number }
 type Action = { type: 'increment' } | { type: 'decrement' } | { type: 'reset'; payload: number };
 
@@ -58,7 +58,7 @@ function reducer(state: State, action: Action): State {
 
 ## 🌍 useContext
 
-```tsx
+```jsx
 interface ThemeContextType {
   theme: string;
   toggleTheme: () => void;

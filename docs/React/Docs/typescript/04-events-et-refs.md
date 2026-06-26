@@ -6,7 +6,7 @@ Manipuler les formulaires et les interactions utilisateur nécessite des types d
 
 ## 🖱️ Événements de souris et boutons
 
-```tsx
+```jsx
 const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
   console.log("Coordonnées :", event.clientX, event.clientY);
 };
@@ -20,7 +20,7 @@ return <button onClick={handleClick}>Cliquer ici</button>;
 
 C'est essentiel pour récupérer la valeur d'un champ sans erreur.
 
-```tsx
+```jsx
 const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
   const newValue = event.target.value;
   console.log(newValue);
@@ -30,7 +30,7 @@ return <input type="text" onChange={handleChange} />;
 ```
 
 ### Soumission (Submit)
-```tsx
+```jsx
 const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
   event.preventDefault(); // Empêche rechargement de page
   // Logique d'envoi
@@ -53,7 +53,7 @@ const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
 
 ## 🎯 Refs et DOM
 
-```tsx
+```jsx
 const videoRef = useRef<HTMLVideoElement>(null);
 
 const playVideo = () => {
