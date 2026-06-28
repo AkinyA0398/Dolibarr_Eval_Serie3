@@ -38,11 +38,11 @@ export const apiDolibarr = {
       dates: formatToDolibarrDate(salaireData.date_debut || salaireData.dates),
       datee: formatToDolibarrDate(salaireData.date_fin || salaireData.datee),
       label: `Salaire - Réf ${salaireData.ref_employe || salaireData.fk_user}`,
-      // 📦 Prise en compte de la colonne paiement pour le traitement ou l'affichage
-      paiement: salaireData.paiement || null
+      // 📦 On sauvegarde le tableau d'objets déjà parsé par parserCsv.js
+      paiements: salaireData.paiements || salaireData.paiementsRaw || []
     };
 
-    console.log("✈️ Payload allégé envoyé à POST /salaries :", payload);
+    console.log("✈️ Payload envoyé à POST /salaries :", payload);
 
     try {
       const res = await apiClient('/salaries', {
@@ -53,13 +53,12 @@ export const apiDolibarr = {
     } catch (error) {
       console.warn("⚠️ Mode de sauvegarde locale activé pour le Dashboard.", error);
       
-      // --- SAUVEGARDE DE SECOURS DANS LE LOCALSTORAGE ---
       const localSalaries = JSON.parse(localStorage.getItem('simulated_salaries') || '[]');
       
       const newSalary = { 
         id: Math.floor(Math.random() * 10000), 
         ...payload,
-        genre: salaireData.genre || 'homme', // ✨ Injecté depuis Import.jsx pour les graphiques !
+        genre: salaireData.genre || 'homme',
         simulated: true 
       };
       
