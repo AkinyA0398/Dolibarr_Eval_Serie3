@@ -162,38 +162,53 @@ export const apiDolibarr = {
       const salaires = await apiClient('/salaries?limit=200').catch(() => []);
       
       if (salaires && salaires.length > 0) {
-        console.log(` Suppression de ${salaires.length} fiches de salaires de test dans Dolibarr...`);
+        console.log(`Suppression de ${salaires.length} fiches de salaires de test dans Dolibarr...`);
         for (const sal of salaires) {
-          const id = sal.id || sal.rowid;
-          if (id) {
+          const id = sal.rowid || sal.id;
+          if (!id) {
+            console.warn('Salaire sans ID, ignoré.', sal);
+            continue;
+          }
+          try {
             await apiClient(`/salaries/${id}`, { method: 'DELETE' });
-            console.log(`️ Salaire ID ${id} supprimé.`);
+            console.log(`Salaire ID ${id} supprimé.`);
+          } catch (delErr) {
+            // 404 = déjà absent ou endpoint non supporté → on continue
+            console.warn(`Impossible de supprimer le salaire ID ${id} (ignoré) :`, delErr.message);
           }
         }
       } else {
-        console.log("ℹ️ Aucune fiche de salaire à vider.");
+        console.log('Aucune fiche de salaire à vider.');
       }
 
       // --- ÉTAPE 2 : Suppression des employés importés ---
       const employes = await apiClient('/users?limit=200').catch(() => []);
       
       if (employes && employes.length > 0) {
-        console.log(" Analyse des comptes utilisateurs pour la purge...");
+        console.log('Analyse des comptes utilisateurs pour la purge...');
         for (const emp of employes) {
-          const id = emp.id || emp.rowid;
-          
+          const id = emp.rowid || emp.id;
+
           if (emp.login === 'aki') {
-            console.log("️ Protection : Le compte administrateur 'aki' a été préservé.");
-            continue; 
+            console.log("Protection : Le compte administrateur 'aki' a été préservé.");
+            continue;
           }
 
-          if (id) {
+          if (!id) {
+            console.warn('Employé sans ID, ignoré.', emp);
+            continue;
+          }
+
+          try {
             await apiClient(`/users/${id}`, { method: 'DELETE' });
-            console.log(`️ Employé de test '${emp.login}' (ID ${id}) supprimé de Dolibarr.`);
+            console.log(`Employé '${emp.login}' (ID ${id}) supprimé de Dolibarr.`);
+          } catch (delErr) {
+            // 404 = déjà absent ou endpoint non supporté → on continue
+            console.warn(`Impossible de supprimer l'employé ID ${id} (ignoré) :`, delErr.message);
           }
         }
       } else {
-        console.log("ℹ️ Aucun employé à vider.");
+        console.log('Aucun employé à vider.');
       }
 
       console.log(" Nettoyage complet des données terminé avec succès !");

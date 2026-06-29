@@ -31,41 +31,58 @@ export default function Dashboard() {
   };
 
   // 1. Calcul des salaires par Genre
+  // Priorité : champ 'genre' stocké dans le salaire lors de l'import (localStorage)
+  // Fallback : champ 'gender' de l'employé Dolibarr
   const totalParGenre = { homme: 0, femme: 0 };
   
   salaires.forEach(sal => {
-    const emp = employes.find(e => Number(e.id || e.rowid) === Number(sal.fk_user));
-    const genre = emp?.gender || 'homme';
-    const cleanGenre = (genre === 'man' || genre === 'homme') ? 'homme' : 'femme';
-    
+    let cleanGenre = 'homme';
+
+    // Cas 1 : le salaire porte déjà son genre (mode localStorage / import)
+    if (sal.genre) {
+      const g = sal.genre.toLowerCase().trim();
+      cleanGenre = (g === 'femme' || g === 'woman' || g === 'f') ? 'femme' : 'homme';
+    } else {
+      // Cas 2 : salaire Dolibarr natif → chercher le genre chez l'employé
+      const emp = employes.find(e => Number(e.id || e.rowid) === Number(sal.fk_user));
+      const gender = emp?.gender || emp?.genre || '';
+      cleanGenre = (gender === 'woman' || gender === 'femme' || gender === 'f') ? 'femme' : 'homme';
+    }
+
     totalParGenre[cleanGenre] += Number(sal.amount || 0);
   });
 
   // 2. Calcul des salaires par Mois de règlement
   const totalParMois = {};
+  const nomsMois = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 
   salaires.forEach(sal => {
     const listPaiements = sal.paiements || [];
     listPaiements.forEach(p => {
-      const dateStr = p.date || '';
-      let cleMois = "Date inconnue";
+      const dateStr = String(p.date || '').trim();
+      let cleMois = 'Date inconnue';
 
-      const parts = dateStr.split(/[-/]/);
-      if (parts.length === 3) {
-        const mois = parts[1];
-        let annee = parts[2];
-        if (annee.length === 2) {
-          annee = `20${annee}`;
-        } else if (parts[0].length === 4) { // Format YYYY-MM-DD
-          annee = parts[0];
-        }
-        
-        const nomsMois = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
-        const indexMois = parseInt(mois, 10) - 1;
-        if(indexMois >= 0 && indexMois < 12) {
-          cleMois = `${nomsMois[indexMois]} ${annee}`;
+      if (dateStr) {
+        const parts = dateStr.split(/[-/]/);
+        if (parts.length === 3) {
+          let jour, mois, annee;
+
+          if (parts[0].length === 4) {
+            // Format YYYY-MM-DD (Dolibarr natif)
+            [annee, mois, jour] = parts;
+          } else {
+            // Format DD/MM/YYYY ou DD/MM/YY (localStorage)
+            [jour, mois, annee] = parts;
+            if (annee.length === 2) annee = `20${annee}`;
+          }
+
+          const indexMois = parseInt(mois, 10) - 1;
+          if (indexMois >= 0 && indexMois < 12 && annee) {
+            cleMois = `${nomsMois[indexMois]} ${annee}`;
+          }
         }
       }
+
       totalParMois[cleMois] = (totalParMois[cleMois] || 0) + Number(p.montant || 0);
     });
   });
