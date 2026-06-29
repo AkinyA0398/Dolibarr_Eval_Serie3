@@ -59,75 +59,103 @@ export default function GestionSalaire({ employe, onBack }) {
   const resteAPayer = (parseFloat(montantTotal) || 0) - calculateTotalVerse();
 
   return (
-    <div style={{ maxWidth: '600px', background: '#fff', padding: '20px', borderRadius: '8px', border: '1px solid #ddd' }}>
-      <button onClick={onBack} style={{ marginBottom: '15px', background: '#6c757d', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>
-        ← Retour à la liste
+    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+      <button onClick={onBack} className="btn btn-secondary mb-4">
+        ← Retour à l'annuaire
       </button>
       
-      <h2>Attribuer et Régler un Salaire pour {employe.lastname || employe.nom}</h2>
-      
-      <form onSubmit={handleSubmit}>
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block' }}>Date de début :</label>
-            <input type="date" value={dateDebut} onChange={e => setDateDebut(e.target.value)} required style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block' }}>Date de fin :</label>
-            <input type="date" value={dateFin} onChange={e => setDateFin(e.target.value)} required style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }} />
-          </div>
+      <div className="card">
+        <div className="card-header">
+          <h2>Rémunération : {employe.lastname || employe.nom}</h2>
+          <p className="text-sm text-muted">Édition de la fiche de salaire et enregistrement des versements</p>
         </div>
-
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', fontWeight: 'bold' }}>Montant Total du Salaire Échu (€) :</label>
-          <input 
-            type="number" 
-            value={montantTotal} 
-            onChange={e => setMontantTotal(e.target.value)} 
-            placeholder="Ex: 1200" 
-            required 
-            style={{ width: '100%', padding: '10px', fontSize: '16px', boxSizing: 'border-box' }}
-          />
-        </div>
-
-        <div style={{ background: '#f9f9f9', padding: '15px', borderRadius: '6px', border: '1px solid #eee', marginBottom: '15px' }}>
-          <h4 style={{ margin: '0 0 10px 0' }}>Historique / Enregistrement des Règlements (Paiement Multiple)</h4>
-          
-          {versements.map((v, idx) => (
-            <div key={idx} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-              <input 
-                type="text" 
-                value={v.date} 
-                onChange={e => handleVersementChange(idx, 'date', e.target.value)} 
-                placeholder="JJ/MM/AAAA" 
-                style={{ flex: 1, padding: '6px' }} 
-              />
-              <input 
-                type="number" 
-                value={v.montant} 
-                onChange={e => handleVersementChange(idx, 'montant', e.target.value)} 
-                placeholder="Montant Versé" 
-                style={{ flex: 1, padding: '6px' }} 
-              />
+        
+        <form onSubmit={handleSubmit}>
+          {/* Période de paie */}
+          <div className="flex gap-4 mb-4">
+            <div className="w-full">
+              <label>Période du</label>
+              <input type="date" value={dateDebut} onChange={e => setDateDebut(e.target.value)} required />
             </div>
-          ))}
+            <div className="w-full">
+              <label>Période au</label>
+              <input type="date" value={dateFin} onChange={e => setDateFin(e.target.value)} required />
+            </div>
+          </div>
 
-          <button type="button" onClick={addVersementField} style={{ background: '#28a745', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-            + Ajouter un versement partiel
+          <div className="mb-4">
+            <label>Montant Total Échu (€)</label>
+            <input 
+              type="number" 
+              value={montantTotal} 
+              onChange={e => setMontantTotal(e.target.value)} 
+              placeholder="Ex: 1200" 
+              required 
+              style={{ fontSize: '1.1rem', fontWeight: '500' }}
+            />
+          </div>
+
+          {/* Registre des versements */}
+          <div style={{ background: 'var(--bg-color)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '1.25rem', marginBottom: '1.5rem' }}>
+            <h4 style={{ marginBottom: '1rem', fontSize: '0.9rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Registre des Versements
+            </h4>
+            
+            <table className="compact-table mb-4" style={{ background: 'transparent' }}>
+              <thead>
+                <tr>
+                  <th style={{ background: 'transparent', paddingLeft: 0 }}>Date de versement</th>
+                  <th style={{ background: 'transparent' }}>Montant versé (€)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {versements.map((v, idx) => (
+                  <tr key={idx}>
+                    <td style={{ paddingLeft: 0 }}>
+                      <input 
+                        type="text" 
+                        value={v.date} 
+                        onChange={e => handleVersementChange(idx, 'date', e.target.value)} 
+                        placeholder="JJ/MM/AAAA" 
+                      />
+                    </td>
+                    <td>
+                      <input 
+                        type="number" 
+                        value={v.montant} 
+                        onChange={e => handleVersementChange(idx, 'montant', e.target.value)} 
+                        placeholder="0.00" 
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <button type="button" onClick={addVersementField} className="btn btn-secondary btn-sm">
+              + Ajouter une ligne de paiement
+            </button>
+          </div>
+
+          {/* Synthèse financière */}
+          <div className="flex justify-between items-center mb-4" style={{ background: 'var(--surface-color)', padding: '1rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', borderLeft: '4px solid var(--primary-color)' }}>
+            <div>
+              <span className="text-muted text-sm">Total des versements saisis</span>
+              <div style={{ fontWeight: '600', fontSize: '1.1rem' }}>{calculateTotalVerse()} €</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <span className="text-muted text-sm">Reste à payer</span>
+              <div style={{ fontWeight: '700', fontSize: '1.25rem', color: resteAPayer > 0 ? 'var(--danger-color)' : 'var(--success-color)' }}>
+                {resteAPayer} €
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" className="btn btn-primary w-full" style={{ padding: '0.75rem', fontSize: '1rem' }}>
+            Valider et Synchroniser avec Dolibarr
           </button>
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', background: '#e2e8f0', borderRadius: '4px', marginBottom: '15px', fontWeight: 'bold' }}>
-          <span>Total Versé : {calculateTotalVerse()} €</span>
-          <span style={{ color: resteAPayer > 0 ? '#dc3545' : '#28a745' }}>
-            Reste dû : {resteAPayer} €
-          </span>
-        </div>
-
-        <button type="submit" style={{ width: '100%', padding: '12px', background: '#17a2b8', color: '#fff', fontWeight: 'bold', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-          Enregistrer et Synchroniser sur Dolibarr
-        </button>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

@@ -35,23 +35,46 @@ export const apiDolibarr = {
       fk_user: parseInt(salaireData.ref_employe || salaireData.fk_user),
       amount: parseFloat(salaireData.montant || salaireData.amount),
       datep: formatToDolibarrDate(salaireData.date_debut || salaireData.datep), 
-      dates: formatToDolibarrDate(salaireData.date_debut || salaireData.dates),
-      datee: formatToDolibarrDate(salaireData.date_fin || salaireData.datee),
-      label: `Salaire - Réf ${salaireData.ref_employe || salaireData.fk_user}`,
-      // 📦 On sauvegarde le tableau d'objets déjà parsé par parserCsv.js
-      paiements: salaireData.paiements || salaireData.paiementsRaw || []
+      datesp: formatToDolibarrDate(salaireData.date_debut || salaireData.dates),
+      dateep: formatToDolibarrDate(salaireData.date_fin || salaireData.datee),
+      label: `Salaire - Réf ${salaireData.ref_employe || salaireData.fk_user}`
     };
+    
+    const paiements = salaireData.paiements || salaireData.paiementsRaw || [];
 
-    console.log("✈️ Payload envoyé à POST /salaries :", payload);
+    console.log("️ Payload envoyé à POST /salaries :", payload);
 
     try {
       const res = await apiClient('/salaries', {
         method: 'POST',
         body: JSON.stringify(payload),
       });
+      
+      // Enregistrer les paiements associés
+      if (res && paiements.length > 0) {
+        for (const p of paiements) {
+          let pDateStr = p.date || p[0];
+          let pMontant = parseFloat(p.montant || p[1] || 0);
+          
+          if (pMontant > 0) {
+            const paymentPayload = {
+              paiementtype: 4, 
+              datepaye: formatToDolibarrDate(pDateStr),
+              amounts: { [res]: pMontant },
+              chid: 1,
+              accountid: 1
+            };
+            
+            await apiClient(`/salaries/${res}/payments`, {
+              method: 'POST',
+              body: JSON.stringify(paymentPayload),
+            });
+          }
+        }
+      }
       return res;
     } catch (error) {
-      console.warn("⚠️ Mode de sauvegarde locale activé pour le Dashboard.", error);
+      console.warn("️ Mode de sauvegarde locale activé pour le Dashboard.", error);
       
       const localSalaries = JSON.parse(localStorage.getItem('simulated_salaries') || '[]');
       
@@ -59,7 +82,8 @@ export const apiDolibarr = {
         id: Math.floor(Math.random() * 10000), 
         ...payload,
         genre: salaireData.genre || 'homme',
-        simulated: true 
+        simulated: true,
+        paiements: paiements
       };
       
       localSalaries.push(newSalary);
@@ -72,9 +96,38 @@ export const apiDolibarr = {
   // 3. Récupérer la liste des salaires (Hybride Dolibarr + Stockage Local)
   getSalaires: async () => {
     try {
-      const dolibarrSalaries = await apiClient('/salaries?limit=100').catch(() => []);
+      const [dolibarrSalaries, dolibarrPayments] = await Promise.all([
+        apiClient('/salaries?limit=100').catch(() => []),
+        apiClient('/salaries/payments?limit=500').catch(() => [])
+      ]);
+
+      const salariesWithPayments = dolibarrSalaries.map(sal => {
+        const paymentsForSal = dolibarrPayments.filter(p => Number(p.fk_salary) === Number(sal.id || sal.rowid));
+        
+        return {
+          ...sal,
+          paiements: paymentsForSal.map(p => {
+             // Dolibarr peut renvoyer la date sous format timestamp Unix ou format string YYYY-MM-DD
+             // On s'assure d'avoir un format compréhensible par le front (ex: DD/MM/YYYY ou YYYY-MM-DD)
+             let paymentDate = p.datep || p.datepaye;
+             if (paymentDate && !isNaN(paymentDate)) {
+               paymentDate = new Date(paymentDate * 1000).toLocaleDateString('fr-FR');
+             } else if (paymentDate) {
+               const parsedDate = new Date(paymentDate);
+               if (!isNaN(parsedDate)) {
+                 paymentDate = parsedDate.toLocaleDateString('fr-FR');
+               }
+             }
+             return {
+               date: paymentDate,
+               montant: parseFloat(p.amount)
+             };
+          })
+        };
+      });
+
       const localSalaries = JSON.parse(localStorage.getItem('simulated_salaries') || '[]');
-      return [...dolibarrSalaries, ...localSalaries];
+      return [...salariesWithPayments, ...localSalaries];
     } catch (error) {
       return JSON.parse(localStorage.getItem('simulated_salaries') || '[]');
     }
@@ -85,13 +138,13 @@ export const apiDolibarr = {
     try {
       const allUsers = await apiClient('/users?limit=100');
       
-      // 🛡️ On filtre l'admin 'aki' pour qu'il n'apparaisse pas dans la liste RH du Front-End
+      // ️ On filtre l'admin 'aki' pour qu'il n'apparaisse pas dans la liste RH du Front-End
       if (Array.isArray(allUsers)) {
         return allUsers.filter(user => user.login !== 'aki');
       }
       return [];
     } catch (error) {
-      console.error("❌ Erreur lors de la récupération des utilisateurs:", error);
+      console.error(" Erreur lors de la récupération des utilisateurs:", error);
       return [];
     }
   },
@@ -99,22 +152,22 @@ export const apiDolibarr = {
   // 5. Bouton Réinitialiser les données (Nettoyage complet et sécurisé)
   resetAllData: async () => {
     try {
-      console.log("🧹 Début de la purge sécurisée des données de simulation...");
+      console.log(" Début de la purge sécurisée des données de simulation...");
 
       // On vide le cache local en premier
       localStorage.removeItem('simulated_salaries');
-      console.log("🧹 Cache local des salaires vidé.");
+      console.log(" Cache local des salaires vidé.");
 
       // --- ÉTAPE 1 : Suppression des fiches de salaires ---
       const salaires = await apiClient('/salaries?limit=200').catch(() => []);
       
       if (salaires && salaires.length > 0) {
-        console.log(`❌ Suppression de ${salaires.length} fiches de salaires de test dans Dolibarr...`);
+        console.log(` Suppression de ${salaires.length} fiches de salaires de test dans Dolibarr...`);
         for (const sal of salaires) {
           const id = sal.id || sal.rowid;
           if (id) {
             await apiClient(`/salaries/${id}`, { method: 'DELETE' });
-            console.log(`🗑️ Salaire ID ${id} supprimé.`);
+            console.log(`️ Salaire ID ${id} supprimé.`);
           }
         }
       } else {
@@ -125,28 +178,28 @@ export const apiDolibarr = {
       const employes = await apiClient('/users?limit=200').catch(() => []);
       
       if (employes && employes.length > 0) {
-        console.log("👥 Analyse des comptes utilisateurs pour la purge...");
+        console.log(" Analyse des comptes utilisateurs pour la purge...");
         for (const emp of employes) {
           const id = emp.id || emp.rowid;
           
           if (emp.login === 'aki') {
-            console.log("🛡️ Protection : Le compte administrateur 'aki' a été préservé.");
+            console.log("️ Protection : Le compte administrateur 'aki' a été préservé.");
             continue; 
           }
 
           if (id) {
             await apiClient(`/users/${id}`, { method: 'DELETE' });
-            console.log(`🗑️ Employé de test '${emp.login}' (ID ${id}) supprimé de Dolibarr.`);
+            console.log(`️ Employé de test '${emp.login}' (ID ${id}) supprimé de Dolibarr.`);
           }
         }
       } else {
         console.log("ℹ️ Aucun employé à vider.");
       }
 
-      console.log("✅ Nettoyage complet des données terminé avec succès !");
+      console.log(" Nettoyage complet des données terminé avec succès !");
       return { success: true };
     } catch (error) {
-      console.error("❌ Erreur lors du nettoyage :", error);
+      console.error(" Erreur lors du nettoyage :", error);
       throw new Error(error.message || "Échec de la purge sécurisée.");
     }
   }

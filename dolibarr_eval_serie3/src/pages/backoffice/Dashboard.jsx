@@ -53,7 +53,12 @@ export default function Dashboard() {
       const parts = dateStr.split(/[-/]/);
       if (parts.length === 3) {
         const mois = parts[1];
-        const annee = parts[2].length === 2 ? `20${parts[2]}` : parts[0];
+        let annee = parts[2];
+        if (annee.length === 2) {
+          annee = `20${annee}`;
+        } else if (parts[0].length === 4) { // Format YYYY-MM-DD
+          annee = parts[0];
+        }
         
         const nomsMois = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
         const indexMois = parseInt(mois, 10) - 1;
@@ -77,8 +82,8 @@ export default function Dashboard() {
         {/* Widget Genre */}
         <div style={{ flex: 1, padding: '20px', background: '#fff', border: '1px solid #eaeaea', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}>
           <h3 style={{ color: '#4a5568', marginTop: 0 }}>Répartition par Genre</h3>
-          <p style={{ fontSize: '22px', margin: '10px 0 5px 0' }}>🧑 Hommes : <strong>{totalParGenre.homme.toLocaleString()} €</strong></p>
-          <p style={{ fontSize: '22px', margin: '0' }}>👩 Femmes : <strong>{totalParGenre.femme.toLocaleString()} €</strong></p>
+          <p style={{ fontSize: '22px', margin: '10px 0 5px 0' }}> Hommes : <strong>{totalParGenre.homme.toLocaleString()} €</strong></p>
+          <p style={{ fontSize: '22px', margin: '0' }}> Femmes : <strong>{totalParGenre.femme.toLocaleString()} €</strong></p>
         </div>
 
         {/* Widget Chronologique */}
@@ -103,8 +108,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 📋 NOUVEAU TABLEAU COMPLET DES PAIEMENTS À PART */}
-      <h3 style={{ color: '#2d3748', marginTop: '40px' }}>📋 Historique des Règlements Effectifs (Détails des Virements)</h3>
+      {/*  NOUVEAU TABLEAU COMPLET DES PAIEMENTS À PART */}
+      <h3 style={{ color: '#2d3748', marginTop: '40px' }}> Historique des Règlements Effectifs (Détails des Virements)</h3>
       
       <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '15px', textAlign: 'left', boxShadow: '0 4px 6px rgba(0,0,0,0.01)' }}>
         <thead>
@@ -149,7 +154,7 @@ export default function Dashboard() {
                   <td style={{ padding: '12px' }}>{index === 0 ? <strong>{getNomEmploye(sal.fk_user)}</strong> : ""}</td>
                   <td style={{ padding: '12px' }}>{index === 0 ? sal.label : ""}</td>
                   <td style={{ padding: '12px' }}>{index === 0 ? `${Number(sal.amount).toLocaleString()} €` : ""}</td>
-                  <td style={{ padding: '12px' }}>📅 {p.date}</td>
+                  <td style={{ padding: '12px' }}> {p.date}</td>
                   <td style={{ padding: '12px', color: '#38a169', fontWeight: 'bold' }}>+{p.montant.toLocaleString()} €</td>
                   <td style={{ padding: '12px' }}>
                     {index === 0 && (

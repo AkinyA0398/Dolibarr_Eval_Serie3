@@ -2,7 +2,7 @@
 import { apiClient } from "../api/apiClient";
 
 // =========================================================
-// 👥 GESTION DES EMPLOYÉS / UTILISATEURS (Endpoints: /users)
+// GESTION DES EMPLOYÉS / UTILISATEURS (Endpoints: /users)
 // =========================================================
 
 /**
@@ -59,7 +59,7 @@ export const deleteEmploye = async (userId) => {
 
 
 // =========================================================
-// 💰 GESTION DES SALAIRES / REMUNERATIONS (Endpoints: /salaries)
+// GESTION DES SALAIRES / REMUNERATIONS (Endpoints: /salaries)
 // =========================================================
 
 /**
@@ -101,7 +101,7 @@ export const createSalaire = async (salaireData) => {
 
 
 // =========================================================
-// 📁 DOCUMENT UPLOAD / IMAGES ZIP (Endpoints: /documents)
+// DOCUMENT UPLOAD / IMAGES ZIP (Endpoints: /documents)
 // =========================================================
 
 /**
@@ -133,7 +133,7 @@ export const uploadEmployeDocument = async (fileBlob, fileName, employeId) => {
 
 
 // =========================================================
-// 🔄 PURGE ET NETTOYAGE GLOBAL (Bouton Réinitialiser)
+// PURGE ET NETTOYAGE GLOBAL (Bouton Réinitialiser)
 // =========================================================
 
 /**

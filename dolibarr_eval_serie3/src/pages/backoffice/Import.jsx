@@ -46,7 +46,7 @@ export default function Import() {
       for (const emp of employes) {
         const res = await apiDolibarr.createEmploye(emp);
         
-        console.log(`📥 Réponse brute Dolibarr pour l'employé ${emp.identifiant || emp.nom} :`, res);
+        console.log(` Réponse brute Dolibarr pour l'employé ${emp.identifiant || emp.nom} :`, res);
         
         const vraiIdDolibarr = res?.id || res?.rowid || (typeof res === 'number' || typeof res === 'string' ? res : null);
         
@@ -55,17 +55,17 @@ export default function Import() {
           
           if (csvRef) {
             idMapping[csvRef] = Number(vraiIdDolibarr);
-            console.log(`🎯 Associé avec succès : CSV Ref "${csvRef}" -> Dolibarr ID ${vraiIdDolibarr}`);
+            console.log(` Associé avec succès : CSV Ref "${csvRef}" -> Dolibarr ID ${vraiIdDolibarr}`);
           }
         } else {
-          console.error("❌ Impossible d'extraire un ID de la réponse Dolibarr pour cet employé.");
+          console.error(" Impossible d'extraire un ID de la réponse Dolibarr pour cet employé.");
         }
         
         countEmp++;
         setStatusMessage(`Injection des employés (${countEmp}/${employes.length})...`);
       }
 
-      console.log("🗺️ Table de correspondance des IDs finale :", idMapping);
+      console.log("️ Table de correspondance des IDs finale :", idMapping);
 
       // 2. Injection des fiches de salaires avec les bons IDs, le genre nettoyé et les paiements
       setStatusMessage(`Injection des fiches de salaires (0/${salaires.length})...`);
@@ -74,7 +74,7 @@ export default function Import() {
         const vraiFkUser = idMapping[sal.ref_employe];
 
         if (!vraiFkUser) {
-          console.warn(`⚠️ Impossible de trouver un employé correspondant à la réf CSV : ${sal.ref_employe}. Le salaire est ignoré.`);
+          console.warn(`️ Impossible de trouver un employé correspondant à la réf CSV : ${sal.ref_employe}. Le salaire est ignoré.`);
           continue;
         }
 
@@ -97,7 +97,7 @@ export default function Import() {
           ...sal,
           ref_employe: vraiFkUser,
           genre: genreNormalise,
-          paiement: sal.paiement || null // 📦 Prise en compte de ta colonne paiement
+          paiement: sal.paiement || null //  Prise en compte de ta colonne paiement
         };
 
         await apiDolibarr.createSalaire(salaireAjuste);
@@ -105,14 +105,14 @@ export default function Import() {
         setStatusMessage(`Injection des fiches de salaires (${countSal}/${salaires.length})...`);
       }
 
-      setStatusMessage("✅ Importation globale réussie avec succès !");
+      setStatusMessage(" Importation globale réussie avec succès !");
       alert("Félicitations, tous les employés et les salaires ont été synchronisés !");
       
       // Force le rafraîchissement complet de l'application pour charger le localStorage dans le Dashboard
       window.location.reload();
       
     } catch (err) {
-      console.error("❌ Erreur lors de l'importation :", err);
+      console.error(" Erreur lors de l'importation :", err);
       setStatusMessage(`Erreur lors de l'importation : ${err.message || err}`);
       alert("Une erreur est survenue pendant l'injection des données.");
     } finally {

@@ -24,12 +24,12 @@ export default function ListeSalaries({ onSelectEmploye }) {
       }
     };
     fetchData();
-  });
+  }, []);
 
   // Logique de filtrage multi-critères
   const employesFiltres = employes.filter(emp => {
     const nom = emp.lastname || emp.nom || '';
-    const genre = emp.gender || emp.genre || ''; // 'man'/'woman' ou 'homme'/'femme'
+    const genre = emp.gender || emp.genre || '';
     const note = emp.note_private || '';
     
     const matchNom = nom.toLowerCase().includes(searchNom.toLowerCase());
@@ -47,59 +47,84 @@ export default function ListeSalaries({ onSelectEmploye }) {
     return matchNom && matchGenre && matchHeures;
   });
 
-  if (loading) return <div>Chargement des salariés...</div>;
+  if (loading) return <div className="container text-muted">Chargement des salariés...</div>;
 
   return (
-    <div>
-      <h2>Liste des Salariés</h2>
+    <div className="card">
+      <div className="card-header flex justify-between items-center">
+        <h2>Annuaire du Personnel</h2>
+        <span className="text-sm text-muted">{employesFiltres.length} salarié(s) trouvé(s)</span>
+      </div>
 
       {/* Barre de recherche multi-critères */}
-      <div style={{ display: 'flex', gap: '15px', padding: '15px', background: '#f0f2f5', borderRadius: '6px', marginBottom: '20px', alignItems: 'center' }}>
-        <div>
-          <label style={{ marginRight: '5px' }}>Nom :</label>
-          <input type="text" value={searchNom} onChange={e => setSearchNom(e.target.value)} placeholder="Rechercher par nom..." style={{ padding: '6px' }} />
+      <div className="filter-bar mb-4" style={{ background: 'var(--bg-color)', padding: '1rem', borderRadius: 'var(--radius-md)', display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+        <div style={{ flex: '1 1 200px' }}>
+          <label>Recherche par nom</label>
+          <input type="text" value={searchNom} onChange={e => setSearchNom(e.target.value)} placeholder="Saisir un nom..." />
         </div>
-        <div>
-          <label style={{ marginRight: '5px' }}>Genre :</label>
-          <select value={searchGenre} onChange={e => setSearchGenre(e.target.value)} style={{ padding: '6px' }}>
+        <div style={{ width: '150px' }}>
+          <label>Genre</label>
+          <select value={searchGenre} onChange={e => setSearchGenre(e.target.value)}>
             <option value="tous">Tous</option>
             <option value="homme">Homme</option>
             <option value="femme">Femme</option>
           </select>
         </div>
-        <div>
-          <label style={{ marginRight: '5px' }}>Heures / Semaine :</label>
-          <input type="number" value={searchHeures} onChange={e => setSearchHeures(e.target.value)} placeholder="Ex: 35" style={{ padding: '6px', width: '80px' }} />
+        <div style={{ width: '150px' }}>
+          <label>Heures / Sem.</label>
+          <input type="number" value={searchHeures} onChange={e => setSearchHeures(e.target.value)} placeholder="Ex: 35" />
         </div>
       </div>
 
-      {/* Grille ou Liste des salariés */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
-        {employesFiltres.map(emp => (
-          <div key={emp.id || emp.ref_employe} style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '15px', background: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-              {/* Image extraite par défaut ou placeholder */}
-              <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: '#ccc', display: 'flex', alignItems: 'center', justifyCentent: 'center', fontWeight: 'bold', color: '#fff' }}>
-                {emp.lastname?.charAt(0) || 'E'}
-              </div>
-              <div>
-                <h3 style={{ margin: '0 0 5px 0' }}>{emp.lastname || emp.nom}</h3>
-                <span style={{ fontSize: '12px', padding: '3px 8px', background: '#e2e8f0', borderRadius: '12px' }}>
-                  {emp.gender === 'man' || emp.genre === 'homme' ? '♂ Homme' : '♀ Femme'}
-                </span>
-              </div>
-            </div>
-            <p style={{ fontSize: '13px', color: '#555', marginTop: '15px' }}>
-              {emp.note_private || `Heures requises : ${emp.heure_travail_semaine || 35}h`}
-            </p>
-            <button 
-              onClick={() => onSelectEmploye(emp)} 
-              style={{ width: '100%', padding: '8px', background: '#007BFF', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '10px' }}
-            >
-              Gérer les Rémunérations / Payer
-            </button>
-          </div>
-        ))}
+      {/* Liste des salariés en format tableau compact */}
+      <div style={{ overflowX: 'auto' }}>
+        <table className="compact-table">
+          <thead>
+            <tr>
+              <th>Salarié</th>
+              <th>Genre</th>
+              <th>Contrat / Heures</th>
+              <th style={{ textAlign: 'right' }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {employesFiltres.map(emp => (
+              <tr key={emp.id || emp.ref_employe}>
+                <td>
+                  <div className="flex items-center gap-2">
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--text-secondary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '14px' }}>
+                      {(emp.lastname || emp.nom || 'E').charAt(0).toUpperCase()}
+                    </div>
+                    <span style={{ fontWeight: '500' }}>{emp.lastname || emp.nom}</span>
+                  </div>
+                </td>
+                <td>
+                  <span style={{ fontSize: '12px', padding: '2px 8px', background: 'var(--bg-color)', border: '1px solid var(--border-color)', borderRadius: '12px', color: 'var(--text-secondary)' }}>
+                    {emp.gender === 'man' || emp.genre === 'homme' ? 'Homme' : 'Femme'}
+                  </span>
+                </td>
+                <td className="text-muted text-sm">
+                  {emp.note_private || `Base : ${emp.heure_travail_semaine || 35}h/sem`}
+                </td>
+                <td style={{ textAlign: 'right' }}>
+                  <button 
+                    onClick={() => onSelectEmploye(emp)} 
+                    className="btn btn-primary btn-sm"
+                  >
+                    Gérer Rémunération
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {employesFiltres.length === 0 && (
+              <tr>
+                <td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }} className="text-muted">
+                  Aucun salarié ne correspond à ces critères.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
