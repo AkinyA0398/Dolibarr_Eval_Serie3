@@ -1,8 +1,8 @@
 // parserCsv.js
 
 export const parseEmployes = (csvText) => {
-  const lines = csvText.trim().split('\n');
-  const headers = lines[0].split(',');
+  // Le .replace(/\r/g, '') nettoie les sauts de ligne Windows potentiels
+  const lines = csvText.replace(/\r/g, '').trim().split('\n');
   
   return lines.slice(1).map(line => {
     const values = line.split(',');
@@ -18,12 +18,11 @@ export const parseEmployes = (csvText) => {
 };
 
 export const parseSalaires = (csvText) => {
-  // Filtrer les lignes vides avant de traiter
-  const lines = csvText.trim().split('\n').filter(l => l.trim());
+  // Filtrer les lignes vides et nettoyer les \r
+  const lines = csvText.replace(/\r/g, '').trim().split('\n').filter(l => l.trim());
   
   return lines.slice(1).map((line, lineIndex) => {
-    // On sépare la partie clean. Le champ paiement peut contenir des virgules
-    // donc on utilise une regex qui capture tout ce qui reste après les 5 premiers champs.
+    // Regex robuste capturant les 5 premiers champs puis le reste (paiements)
     const match = line.match(/^(\d+),(\d+),([^,]+),([^,]+),(\d+),(.*)$/);
     if (!match) {
       console.warn(`[Parser CSV] Ligne ${lineIndex + 2} ignorée (format invalide) : "${line}"`);
@@ -37,17 +36,15 @@ export const parseSalaires = (csvText) => {
 
     if (cleanPaiementRaw.startsWith('{')) {
       // Format complexe : {["08/03/26",890],["08/03/26",300]}
-      // On extrait chaque groupe entre crochets [ ]
       const bracketMatches = cleanPaiementRaw.match(/\[([^\]]+)\]/g);
       if (bracketMatches) {
         paiements = bracketMatches.map(b => {
-          // b ressemble à ["08/03/26",480]
-          const cleanB = b.replace(/[\[\]"]/g, ''); // → "08/03/26,480"
+          const cleanB = b.replace(/[\[\]"]/g, ''); // Ex: "08/03/26,890"
           const parts = cleanB.split(',');
           let dateStr = (parts[0] || '').trim();
           const val = parseFloat((parts[1] || '0').trim());
           
-          // Normaliser les années à 2 chiffres → 4 chiffres (ex: "26" → "2026")
+          // Normalisation de l'année à 4 chiffres (ex: "26" -> "2026")
           if (dateStr) {
             const dateParts = dateStr.split('/');
             if (dateParts.length === 3 && dateParts[2].length === 2) {
@@ -57,13 +54,12 @@ export const parseSalaires = (csvText) => {
           }
           
           return { date: dateStr, montant: val };
-        }).filter(p => p.montant > 0); // Ignorer les paiements à 0 €
+        }).filter(p => p.montant > 0); // Exclure les montants nuls
       }
     } else if (cleanPaiementRaw && !isNaN(cleanPaiementRaw)) {
-      // Cas simple : juste un montant direct → payé à la date de fin
+      // Cas simple : montant direct équivalent à un paiement unique à la date de fin
       paiements = [{ date: date_fin.trim(), montant: parseFloat(cleanPaiementRaw) }];
     }
-    // Sinon (champ vide) → paiements reste []
     
     console.log(`[Parser CSV] Ligne ${lineIndex + 2} → ref_sal=${ref_salaire}, ref_emp=${ref_employe}, montant=${montant}€, paiements:`, paiements);
 

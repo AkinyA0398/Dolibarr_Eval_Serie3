@@ -3,16 +3,28 @@ import React, { useState, useEffect } from 'react';
 import { apiDolibarr } from '../../api/apiDolibarr';
 
 // --- Helpers ---
-// Parseur robuste pour transformer "JJ/MM/AAAA" ou Timestamp en Date valide
+// Parseur robuste pour transformer "JJ/MM/AAAA", "AAAA-MM-JJ" ou Timestamp en Date valide
 const parseDateString = (dateStr) => {
   if (!dateStr) return null;
   if (!isNaN(dateStr)) return new Date(Number(dateStr) * 1000); // Timestamp
-  if (typeof dateStr === 'string' && dateStr.includes('/')) {
-    const [day, month, year] = dateStr.split('/');
-    return new Date(Number(year), Number(month) - 1, Number(day));
+
+  if (typeof dateStr === 'string') {
+    // 1. Format ISO "YYYY-MM-DD" (renvoyé par Dolibarr après formatage)
+    if (dateStr.includes('-')) {
+      const cleanStr = dateStr.split(' ')[0]; // Retire les heures si présentes
+      const [year, month, day] = cleanStr.split('-');
+      return new Date(Number(year), Number(month) - 1, Number(day));
+    }
+    
+    // 2. Format Français "JJ/MM/AAAA" (CSV direct)
+    if (dateStr.includes('/')) {
+      const [day, month, year] = dateStr.split('/');
+      return new Date(Number(year), Number(month) - 1, Number(day));
+    }
   }
+
   const d = new Date(dateStr);
-  return isNaN(d) ? null : d;
+  return isNaN(d.getTime()) ? null : d;
 };
 
 const formatDate = (dateStr) => {
@@ -274,7 +286,23 @@ export default function HistoriqueSalaires({ onBack }) {
                       </td>
                       <td>
                         <div style={{ fontSize: '0.875rem' }}>
-                          {formatDate(sal.date_debut || sal.datep)}
+                          {(() => {
+                            // 1. Tente de lire et de formater la date de début d'origine
+                            const rawStart = sal.date_debut || sal.datep;
+                            const formattedStart = formatDate(rawStart);
+                            if (formattedStart !== '—') return formattedStart;
+
+                            // 2. Fallback intelligent : si la date de fin est disponible (ex: "08/03/2026" ou "2026-03-08")
+                            // on extrait le mois et l'année pour déduire le premier jour du mois correspondant.
+                            const rawEnd = sal.date_fin || sal.dateep;
+                            if (rawEnd) {
+                              const endObj = parseDateString(rawEnd);
+                              if (endObj) {
+                                return `01/${String(endObj.getMonth() + 1).padStart(2, '0')}/${endObj.getFullYear()}`;
+                              }
+                            }
+                            return '—';
+                          })()}
                         </div>
                         {(sal.date_fin || sal.dateep) && (
                           <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
