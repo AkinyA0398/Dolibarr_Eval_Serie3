@@ -87,112 +87,142 @@ export default function Dashboard() {
     });
   });
 
-  if (loading) return <div style={{ padding: '20px' }}>Chargement des statistiques financières...</div>;
+  if (loading) return (
+    <div className="container flex items-center justify-center" style={{ minHeight: '60vh' }}>
+      <div className="text-muted" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ fontSize: '3rem', marginBottom: '1rem', animation: 'spin 2s linear infinite' }}>⏳</div>
+        <p style={{ fontWeight: '600', fontSize: '1.25rem' }}>Chargement des statistiques...</p>
+      </div>
+    </div>
+  );
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif', color: '#2d3748' }}>
-      <h2>Tableau de Bord Financier (Backoffice)</h2>
-      <hr />
+    <div className="animate-fade-in" style={{ padding: '20px', color: 'var(--text-primary)' }}>
+      <h2 style={{ fontSize: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}><span>📊</span> Tableau de Bord Financier</h2>
+      <p className="text-muted" style={{ marginBottom: '2rem', fontSize: '1rem', fontWeight: '500' }}>Vue d'ensemble et répartition des rémunérations</p>
 
       {/* Widgets du Haut */}
-      <div style={{ display: 'flex', gap: '25px', marginTop: '20px', marginBottom: '30px' }}>
+      <div style={{ display: 'flex', gap: '25px', marginTop: '20px', marginBottom: '40px', flexWrap: 'wrap' }}>
         {/* Widget Genre */}
-        <div style={{ flex: 1, padding: '20px', background: '#fff', border: '1px solid #eaeaea', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}>
-          <h3 style={{ color: '#4a5568', marginTop: 0 }}>Répartition par Genre</h3>
-          <p style={{ fontSize: '22px', margin: '10px 0 5px 0' }}> Hommes : <strong>{totalParGenre.homme.toLocaleString()} €</strong></p>
-          <p style={{ fontSize: '22px', margin: '0' }}> Femmes : <strong>{totalParGenre.femme.toLocaleString()} €</strong></p>
+        <div className="card" style={{ flex: '1 1 300px', padding: '1.75rem', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: '-20px', right: '-20px', fontSize: '8rem', opacity: 0.05, transform: 'rotate(-15deg)' }}>🚻</div>
+          <h3 style={{ color: 'var(--text-secondary)', marginTop: 0, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.85rem' }}>Répartition par Genre</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'rgba(3, 105, 161, 0.05)', borderRadius: 'var(--radius-sm)', borderLeft: '4px solid #0ea5e9' }}>
+              <span style={{ fontWeight: '600', color: '#0369a1' }}>Hommes</span>
+              <strong style={{ fontSize: '1.5rem', color: '#0369a1' }}>{totalParGenre.homme.toLocaleString()} €</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'rgba(190, 24, 93, 0.05)', borderRadius: 'var(--radius-sm)', borderLeft: '4px solid #f43f5e' }}>
+              <span style={{ fontWeight: '600', color: '#be185d' }}>Femmes</span>
+              <strong style={{ fontSize: '1.5rem', color: '#be185d' }}>{totalParGenre.femme.toLocaleString()} €</strong>
+            </div>
+          </div>
         </div>
 
         {/* Widget Chronologique */}
-        <div style={{ flex: 1, padding: '20px', background: '#fff', border: '1px solid #eaeaea', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}>
-          <h3 style={{ color: '#4a5568', marginTop: 0 }}>Volume versé par mois</h3>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ textAlign: 'left', borderBottom: '2px solid #edf2f7' }}>
-                <th style={{ padding: '5px 0' }}>Période</th>
-                <th>Total Distribué</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(totalParMois).map(([mois, total]) => (
-                <tr key={mois} style={{ borderBottom: '1px solid #edf2f7' }}>
-                  <td style={{ padding: '8px 0', fontWeight: '500' }}>{mois}</td>
-                  <td style={{ fontWeight: 'bold', color: '#2b6cb0' }}>{total.toLocaleString()} €</td>
+        <div className="card" style={{ flex: '2 1 500px', padding: '1.75rem' }}>
+          <h3 style={{ color: 'var(--text-secondary)', marginTop: 0, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.85rem', marginBottom: '1rem' }}>Volume versé par mois</h3>
+          <div style={{ overflowX: 'auto', maxHeight: '250px' }}>
+            <table className="compact-table" style={{ background: 'transparent' }}>
+              <thead>
+                <tr>
+                  <th style={{ background: 'transparent' }}>Période</th>
+                  <th style={{ background: 'transparent', textAlign: 'right' }}>Total Distribué</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {Object.entries(totalParMois).map(([mois, total]) => (
+                  <tr key={mois} style={{ background: 'transparent' }}>
+                    <td style={{ fontWeight: '600', color: 'var(--text-secondary)' }}>{mois}</td>
+                    <td style={{ fontWeight: '800', color: 'var(--accent-color)', textAlign: 'right' }}>{total.toLocaleString()} €</td>
+                  </tr>
+                ))}
+                {Object.keys(totalParMois).length === 0 && (
+                  <tr><td colSpan={2} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Aucune donnée mensuelle.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       {/*  NOUVEAU TABLEAU COMPLET DES PAIEMENTS À PART */}
-      <h3 style={{ color: '#2d3748', marginTop: '40px' }}> Historique des Règlements Effectifs (Détails des Virements)</h3>
+      <h3 style={{ fontSize: '1.5rem', color: 'var(--primary-color)', marginTop: '40px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <span>🧾</span> Historique des Règlements Effectifs (Détails des Virements)
+      </h3>
       
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '15px', textAlign: 'left', boxShadow: '0 4px 6px rgba(0,0,0,0.01)' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#edf2f7', borderBottom: '2px solid #cbd5e0' }}>
-            <th style={{ padding: '12px' }}>Employé</th>
-            <th style={{ padding: '12px' }}>Libellé</th>
-            <th style={{ padding: '12px' }}>Montant Fiche</th>
-            <th style={{ padding: '12px' }}>Date du Virement</th>
-            <th style={{ padding: '12px' }}>Montant Versé</th>
-            <th style={{ padding: '12px' }}>Statut Fiche</th>
-          </tr>
-        </thead>
-        <tbody>
-          {salaires.map((sal) => {
-            const listPaiements = sal.paiements || [];
+      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <table className="compact-table" style={{ marginBottom: 0 }}>
+          <thead>
+            <tr>
+              <th style={{ paddingLeft: '1.5rem' }}>Employé</th>
+              <th>Libellé</th>
+              <th style={{ textAlign: 'right' }}>Montant Fiche</th>
+              <th style={{ textAlign: 'center' }}>Date du Virement</th>
+              <th style={{ textAlign: 'right' }}>Montant Versé</th>
+              <th style={{ textAlign: 'center' }}>Statut Fiche</th>
+            </tr>
+          </thead>
+          <tbody>
+            {salaires.map((sal) => {
+              const listPaiements = sal.paiements || [];
 
-            // Cas : Fiche de paye sans aucun paiement (Ex: ligne 4 du CSV)
-            if (listPaiements.length === 0) {
-              return (
-                <tr key={`no-pay-${sal.id || Math.random()}`} style={{ backgroundColor: '#fffaf0', borderBottom: '1px solid #feebc8' }}>
-                  <td style={{ padding: '12px' }}><strong>{getNomEmploye(sal.fk_user)}</strong></td>
-                  <td style={{ padding: '12px' }}>{sal.label}</td>
-                  <td style={{ padding: '12px' }}>{Number(sal.amount).toLocaleString()} €</td>
-                  <td style={{ padding: '12px', color: '#dd6b20', fontStyle: 'italic' }}>En attente</td>
-                  <td style={{ padding: '12px', color: '#dd6b20', fontWeight: 'bold' }}>0 €</td>
-                  <td style={{ padding: '12px' }}>
-                    <span style={{ padding: '4px 8px', borderRadius: '4px', background: '#feebc8', color: '#c05621', fontSize: '12px', fontWeight: 'bold' }}>
-                      NON RÉGLÉ
-                    </span>
-                  </td>
-                </tr>
-              );
-            }
-
-            // Cas : Un ou plusieurs paiements liés à la même fiche
-            return listPaiements.map((p, index) => {
-              const totalVerse = listPaiements.reduce((sum, item) => sum + item.montant, 0);
-              const estSolde = totalVerse >= Number(sal.amount);
-
-              return (
-                <tr key={`pay-${sal.id}-${index}`} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                  <td style={{ padding: '12px' }}>{index === 0 ? <strong>{getNomEmploye(sal.fk_user)}</strong> : ""}</td>
-                  <td style={{ padding: '12px' }}>{index === 0 ? sal.label : ""}</td>
-                  <td style={{ padding: '12px' }}>{index === 0 ? `${Number(sal.amount).toLocaleString()} €` : ""}</td>
-                  <td style={{ padding: '12px' }}> {p.date}</td>
-                  <td style={{ padding: '12px', color: '#38a169', fontWeight: 'bold' }}>+{p.montant.toLocaleString()} €</td>
-                  <td style={{ padding: '12px' }}>
-                    {index === 0 && (
-                      <span style={{ 
-                        padding: '4px 8px', 
-                        borderRadius: '4px', 
-                        background: estSolde ? '#c6f6d5' : '#e2e8f0', 
-                        color: estSolde ? '#22543d' : '#4a5568',
-                        fontSize: '12px',
-                        fontWeight: 'bold'
-                      }}>
-                        {estSolde ? "SOLDÉ" : "PARTIEL"}
+              // Cas : Fiche de paye sans aucun paiement
+              if (listPaiements.length === 0) {
+                return (
+                  <tr key={`no-pay-${sal.id || Math.random()}`} style={{ background: 'rgba(254, 243, 199, 0.3)' }}>
+                    <td style={{ paddingLeft: '1.5rem' }}><strong style={{ color: 'var(--primary-color)' }}>{getNomEmploye(sal.fk_user)}</strong></td>
+                    <td style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>{sal.label}</td>
+                    <td style={{ textAlign: 'right', fontWeight: '700' }}>{Number(sal.amount).toLocaleString()} €</td>
+                    <td style={{ textAlign: 'center', color: '#b45309', fontStyle: 'italic', fontWeight: '500' }}>En attente</td>
+                    <td style={{ textAlign: 'right', color: '#b45309', fontWeight: '800' }}>0 €</td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span className="badge" style={{ background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a' }}>
+                        NON RÉGLÉ
                       </span>
-                    )}
-                  </td>
-                </tr>
-              );
-            });
-          })}
-        </tbody>
-      </table>
+                    </td>
+                  </tr>
+                );
+              }
+
+              // Cas : Un ou plusieurs paiements liés à la même fiche
+              return listPaiements.map((p, index) => {
+                const totalVerse = listPaiements.reduce((sum, item) => sum + item.montant, 0);
+                const estSolde = totalVerse >= Number(sal.amount);
+
+                return (
+                  <tr key={`pay-${sal.id}-${index}`}>
+                    <td style={{ paddingLeft: '1.5rem' }}>{index === 0 ? <strong style={{ color: 'var(--primary-color)' }}>{getNomEmploye(sal.fk_user)}</strong> : ""}</td>
+                    <td style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>{index === 0 ? sal.label : ""}</td>
+                    <td style={{ textAlign: 'right', fontWeight: '700' }}>{index === 0 ? `${Number(sal.amount).toLocaleString()} €` : ""}</td>
+                    <td style={{ textAlign: 'center', fontWeight: '500' }}> {p.date}</td>
+                    <td style={{ textAlign: 'right', color: 'var(--success-color)', fontWeight: '800' }}>+{p.montant.toLocaleString()} €</td>
+                    <td style={{ textAlign: 'center' }}>
+                      {index === 0 && (
+                        <span className="badge" style={{ 
+                          background: estSolde ? 'var(--success-bg)' : '#f1f5f9', 
+                          color: estSolde ? 'var(--success-color)' : 'var(--text-secondary)',
+                          border: `1px solid ${estSolde ? '#a7f3d0' : '#e2e8f0'}`
+                        }}>
+                          {estSolde ? "SOLDÉ" : "PARTIEL"}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              });
+            })}
+            {salaires.length === 0 && (
+              <tr>
+                <td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                  <div style={{ fontSize: '2rem', marginBottom: '1rem', opacity: 0.5 }}>📭</div>
+                  Aucun salaire enregistré pour le moment.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

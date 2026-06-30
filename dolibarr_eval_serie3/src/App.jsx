@@ -25,8 +25,8 @@ export default function App() {
       <header className="navbar">
         <div className="navbar-container">
           <div className="navbar-brand" onClick={() => { setCurrentView('front_liste'); setSelectedEmploye(null); }}>
-            <span className="logo-icon"></span>
-            <span>HR Core Portal</span>
+            <span className="logo-icon">🚀</span>
+            <span>Evaluation Série 3 - Dolibarr</span>
           </div>
           
           <nav className="navbar-links">
@@ -34,13 +34,13 @@ export default function App() {
               className={`nav-btn ${currentView.startsWith('front') ? 'active' : ''}`}
               onClick={() => { setCurrentView('front_liste'); setSelectedEmploye(null); }}
             >
-              Salariés
+              Annuaire
             </button>
 
             <span className="nav-divider"></span>
 
             {!authToken ? (
-              <button className="btn btn-secondary btn-sm nav-login" onClick={() => setCurrentView('login')}>
+              <button className="btn btn-primary btn-sm nav-login" onClick={() => setCurrentView('login')}>
                 Accès Sécurisé
               </button>
             ) : (

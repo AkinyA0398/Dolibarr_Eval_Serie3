@@ -16,17 +16,22 @@ const formatMontant = (val) =>
 const StatCard = ({ label, value, sub, color }) => (
   <div style={{
     background: 'var(--surface-color)',
+    backdropFilter: 'var(--blur-md)',
     border: '1px solid var(--border-color)',
     borderRadius: 'var(--radius-md)',
-    padding: '1.25rem 1.5rem',
-    borderTop: `3px solid ${color || 'var(--accent-color)'}`,
-    boxShadow: 'var(--shadow-sm)',
-    minWidth: '160px',
-    flex: '1 1 160px',
-  }}>
-    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>{label}</div>
-    <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-primary)' }}>{value}</div>
-    {sub && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{sub}</div>}
+    padding: '1.5rem',
+    borderLeft: `4px solid ${color || 'var(--accent-color)'}`,
+    boxShadow: 'var(--shadow-md)',
+    minWidth: '200px',
+    flex: '1 1 200px',
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+  }}
+  onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+  onMouseLeave={e => e.currentTarget.style.transform = 'none'}
+  >
+    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem', fontWeight: '600' }}>{label}</div>
+    <div style={{ fontSize: '1.75rem', fontWeight: '800', color: color || 'var(--text-primary)' }}>{value}</div>
+    {sub && <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.5rem', fontWeight: '500' }}>{sub}</div>}
   </div>
 );
 
@@ -127,25 +132,25 @@ export default function HistoriqueSalaires({ onBack }) {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
         <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
-          <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
-          <p>Chargement de l'historique...</p>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem', animation: 'spin 2s linear infinite' }}>⏳</div>
+          <p style={{ fontWeight: '600', fontSize: '1.25rem' }}>Chargement de l'historique...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+    <div className="animate-fade-in" style={{ maxWidth: '1100px', margin: '0 auto' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-        <button onClick={onBack} className="btn btn-secondary btn-sm">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+        <button onClick={onBack} className="btn btn-secondary btn-sm" style={{ borderRadius: 'var(--radius-xl)' }}>
           ← Retour à l'annuaire
         </button>
         <div>
-          <h1 style={{ fontSize: '1.5rem', margin: 0 }}>Historique des Paiements de Salaire</h1>
-          <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+          <h1 style={{ fontSize: '2rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span>📜</span> Historique des Paiements de Salaire</h1>
+          <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '500' }}>
             Suivi complet des versements et fiches de rémunération
           </p>
         </div>
@@ -160,10 +165,10 @@ export default function HistoriqueSalaires({ onBack }) {
       </div>
 
       {/* Filtres */}
-      <div className="card" style={{ marginBottom: '1.5rem', padding: '1rem' }}>
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-          <div style={{ flex: '1 1 200px' }}>
-            <label>Recherche par nom</label>
+      <div className="card" style={{ marginBottom: '2rem', padding: '1.25rem', background: 'rgba(248, 250, 252, 0.6)' }}>
+        <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+          <div style={{ flex: '1 1 220px' }}>
+            <label>🔍 Recherche par nom</label>
             <input
               type="text"
               value={searchNom}
@@ -171,8 +176,8 @@ export default function HistoriqueSalaires({ onBack }) {
               placeholder="Saisir un nom..."
             />
           </div>
-          <div style={{ flex: '1 1 180px' }}>
-            <label>Filtrer par employé</label>
+          <div style={{ flex: '1 1 200px' }}>
+            <label>👤 Filtrer par employé</label>
             <select value={selectedEmployeId} onChange={e => setSelectedEmployeId(e.target.value)}>
               <option value="tous">Tous les employés</option>
               {employes.map(emp => (
@@ -182,8 +187,8 @@ export default function HistoriqueSalaires({ onBack }) {
               ))}
             </select>
           </div>
-          <div style={{ flex: '1 1 160px' }}>
-            <label>Filtrer par mois</label>
+          <div style={{ flex: '1 1 180px' }}>
+            <label>📅 Filtrer par mois</label>
             <select value={selectedMois} onChange={e => setSelectedMois(e.target.value)}>
               <option value="tous">Tous les mois</option>
               {moisDisponibles.map(m => {
@@ -197,8 +202,9 @@ export default function HistoriqueSalaires({ onBack }) {
             <button
               className="btn btn-secondary btn-sm"
               onClick={() => { setSearchNom(''); setSelectedEmployeId('tous'); setSelectedMois('tous'); }}
+              style={{ padding: '0.65rem 1rem', borderRadius: 'var(--radius-xl)' }}
             >
-              Réinitialiser
+              🔄 Réinitialiser
             </button>
           </div>
         </div>

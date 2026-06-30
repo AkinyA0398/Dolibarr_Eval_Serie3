@@ -59,14 +59,16 @@ export default function GestionSalaire({ employe, onBack }) {
   const resteAPayer = (parseFloat(montantTotal) || 0) - calculateTotalVerse();
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <button onClick={onBack} className="btn btn-secondary mb-4">
+    <div className="animate-fade-in" style={{ maxWidth: '800px', margin: '0 auto' }}>
+      <button onClick={onBack} className="btn btn-secondary mb-4" style={{ borderRadius: 'var(--radius-xl)' }}>
         ← Retour à l'annuaire
       </button>
       
       <div className="card">
         <div className="card-header">
-          <h2>Rémunération : {employe.lastname || employe.nom}</h2>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '1.5rem' }}>💳</span> Rémunération : {employe.lastname || employe.nom}
+          </h2>
           <p className="text-sm text-muted">Édition de la fiche de salaire et enregistrement des versements</p>
         </div>
         
@@ -74,31 +76,31 @@ export default function GestionSalaire({ employe, onBack }) {
           {/* Période de paie */}
           <div className="flex gap-4 mb-4">
             <div className="w-full">
-              <label>Période du</label>
+              <label>📅 Période du</label>
               <input type="date" value={dateDebut} onChange={e => setDateDebut(e.target.value)} required />
             </div>
             <div className="w-full">
-              <label>Période au</label>
+              <label>📅 Période au</label>
               <input type="date" value={dateFin} onChange={e => setDateFin(e.target.value)} required />
             </div>
           </div>
 
           <div className="mb-4">
-            <label>Montant Total Échu (€)</label>
+            <label>💰 Montant Total Échu (€)</label>
             <input 
               type="number" 
               value={montantTotal} 
               onChange={e => setMontantTotal(e.target.value)} 
               placeholder="Ex: 1200" 
               required 
-              style={{ fontSize: '1.1rem', fontWeight: '500' }}
+              style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--primary-color)' }}
             />
           </div>
 
           {/* Registre des versements */}
-          <div style={{ background: 'var(--bg-color)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '1.25rem', marginBottom: '1.5rem' }}>
-            <h4 style={{ marginBottom: '1rem', fontSize: '0.9rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Registre des Versements
+          <div style={{ background: 'var(--bg-gradient-start)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '1.5rem', marginBottom: '1.5rem' }}>
+            <h4 style={{ marginBottom: '1rem', fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span>🧾</span> Registre des Versements
             </h4>
             
             <table className="compact-table mb-4" style={{ background: 'transparent' }}>
@@ -110,7 +112,7 @@ export default function GestionSalaire({ employe, onBack }) {
               </thead>
               <tbody>
                 {versements.map((v, idx) => (
-                  <tr key={idx}>
+                  <tr key={idx} style={{ background: 'transparent' }}>
                     <td style={{ paddingLeft: 0 }}>
                       <input 
                         type="text" 
@@ -125,6 +127,7 @@ export default function GestionSalaire({ employe, onBack }) {
                         value={v.montant} 
                         onChange={e => handleVersementChange(idx, 'montant', e.target.value)} 
                         placeholder="0.00" 
+                        style={{ fontWeight: '600', color: 'var(--success-color)' }}
                       />
                     </td>
                   </tr>
@@ -132,27 +135,27 @@ export default function GestionSalaire({ employe, onBack }) {
               </tbody>
             </table>
 
-            <button type="button" onClick={addVersementField} className="btn btn-secondary btn-sm">
+            <button type="button" onClick={addVersementField} className="btn btn-secondary btn-sm" style={{ borderRadius: 'var(--radius-xl)' }}>
               + Ajouter une ligne de paiement
             </button>
           </div>
 
           {/* Synthèse financière */}
-          <div className="flex justify-between items-center mb-4" style={{ background: 'var(--surface-color)', padding: '1rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', borderLeft: '4px solid var(--primary-color)' }}>
+          <div className="flex justify-between items-center mb-4" style={{ background: 'var(--surface-color)', padding: '1.25rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', borderLeft: '4px solid var(--accent-color)', boxShadow: 'var(--shadow-sm)' }}>
             <div>
-              <span className="text-muted text-sm">Total des versements saisis</span>
-              <div style={{ fontWeight: '600', fontSize: '1.1rem' }}>{calculateTotalVerse()} €</div>
+              <span className="text-muted text-sm text-uppercase" style={{ letterSpacing: '0.05em', fontWeight: '600' }}>Total des versements saisis</span>
+              <div style={{ fontWeight: '800', fontSize: '1.25rem', color: 'var(--success-color)' }}>{calculateTotalVerse().toLocaleString()} €</div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <span className="text-muted text-sm">Reste à payer</span>
-              <div style={{ fontWeight: '700', fontSize: '1.25rem', color: resteAPayer > 0 ? 'var(--danger-color)' : 'var(--success-color)' }}>
-                {resteAPayer} €
+              <span className="text-muted text-sm text-uppercase" style={{ letterSpacing: '0.05em', fontWeight: '600' }}>Reste à payer</span>
+              <div style={{ fontWeight: '800', fontSize: '1.5rem', color: resteAPayer > 0 ? 'var(--danger-color)' : 'var(--success-color)' }}>
+                {resteAPayer.toLocaleString()} €
               </div>
             </div>
           </div>
 
-          <button type="submit" className="btn btn-primary w-full" style={{ padding: '0.75rem', fontSize: '1rem' }}>
-            Valider et Synchroniser avec Dolibarr
+          <button type="submit" className="btn btn-primary w-full" style={{ padding: '0.85rem', fontSize: '1.1rem', marginTop: '1rem' }}>
+            ✅ Valider et Synchroniser avec Dolibarr
           </button>
         </form>
       </div>

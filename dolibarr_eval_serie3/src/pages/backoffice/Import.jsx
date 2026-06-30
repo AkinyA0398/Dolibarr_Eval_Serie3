@@ -92,12 +92,12 @@ export default function Import() {
           }
         }
 
-        // On crée l'objet complet incluant le genre normalisé ET la colonne paiement
+        // On crée l'objet complet incluant le genre normalisé ET les paiements
         const salaireAjuste = {
           ...sal,
           ref_employe: vraiFkUser,
           genre: genreNormalise,
-          paiement: sal.paiement || null //  Prise en compte de ta colonne paiement
+          paiements: sal.paiements || []  // Tableau des versements issu du parseur CSV
         };
 
         await apiDolibarr.createSalaire(salaireAjuste);
@@ -121,47 +121,64 @@ export default function Import() {
   };
 
   return (
-    <div>
-      <h2>Importation du dossier global</h2>
-      <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxWidth: '500px' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px' }}>1. Fichier CSV des Employés :</label>
-          <input type="file" accept=".csv" disabled={isImporting} onChange={(e) => setFileEmployes(e.target.files[0])} />
-        </div>
+    <div className="animate-fade-in container" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1rem' }}>
+      <div className="card" style={{ padding: '3rem', textAlign: 'center' }}>
+        <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem', color: 'var(--primary-color)' }}>
+          Importation Sécurisée
+        </h2>
+        <p className="text-muted" style={{ fontSize: '1.1rem', marginBottom: '2.5rem' }}>
+          Téléversez vos données de paie et votre base de collaborateurs pour initialiser le système.
+        </p>
+        
+        <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '600px', margin: '0 auto' }}>
+          
+          <div style={{ background: 'var(--surface-color)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '2px dashed var(--border-color)', transition: 'all 0.2s ease' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent-color)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-color)'}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem', fontSize: '1rem', fontWeight: '700', color: 'var(--primary-color)' }}>
+               1. Fichier CSV des Employés
+            </label>
+            <input type="file" accept=".csv" disabled={isImporting} onChange={(e) => setFileEmployes(e.target.files[0])} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', width: '100%', background: 'rgba(255,255,255,0.5)' }} />
+          </div>
 
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px' }}>2. Fichier CSV des Salaires :</label>
-          <input type="file" accept=".csv" disabled={isImporting} onChange={(e) => setFileSalaires(e.target.files[0])} />
-        </div>
+          <div style={{ background: 'var(--surface-color)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '2px dashed var(--border-color)', transition: 'all 0.2s ease' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent-color)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-color)'}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem', fontSize: '1rem', fontWeight: '700', color: 'var(--primary-color)' }}>
+               2. Fichier CSV des Salaires
+            </label>
+            <input type="file" accept=".csv" disabled={isImporting} onChange={(e) => setFileSalaires(e.target.files[0])} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', width: '100%', background: 'rgba(255,255,255,0.5)' }} />
+          </div>
 
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px' }}>3. Fichier ZIP des Images :</label>
-          <input type="file" accept=".zip" disabled={isImporting} onChange={(e) => setFileZip(e.target.files[0])} />
-        </div>
+          <div style={{ background: 'var(--surface-color)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '2px dashed var(--border-color)', transition: 'all 0.2s ease' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent-color)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-color)'}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem', fontSize: '1rem', fontWeight: '700', color: 'var(--primary-color)' }}>
+             3. Fichier ZIP des Images (Optionnel)
+            </label>
+            <input type="file" accept=".zip" disabled={isImporting} onChange={(e) => setFileZip(e.target.files[0])} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', width: '100%', background: 'rgba(255,255,255,0.5)' }} />
+          </div>
 
-        <button 
-          type="submit" 
-          disabled={isImporting}
-          style={{ 
-            padding: '10px', 
-            background: isImporting ? '#ccc' : '#28A745', 
-            color: '#fff', 
-            border: 'none', 
-            borderRadius: '4px', 
-            cursor: isImporting ? 'not-allowed' : 'pointer', 
-            marginTop: '10px',
-            fontWeight: 'bold'
-          }}
-        >
-          {isImporting ? "Importation en cours..." : "Lancer l'importation"}
-        </button>
-      </form>
+          <button 
+            type="submit" 
+            disabled={isImporting}
+            className="btn btn-primary w-full"
+            style={{ 
+              padding: '1rem', 
+              fontSize: '1.1rem',
+              marginTop: '1rem',
+              opacity: isImporting ? 0.7 : 1,
+              cursor: isImporting ? 'wait' : 'pointer'
+            }}
+          >
+            {isImporting ? (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                <span style={{ animation: 'spin 2s linear infinite' }}>⏳</span> Importation en cours...
+              </span>
+            ) : "Démarrer l'Importation"}
+          </button>
+        </form>
 
-      {statusMessage && (
-        <div style={{ marginTop: '20px', padding: '10px', borderRadius: '4px', backgroundColor: '#f8f9fa', border: '1px solid #ddd', maxWidth: '500px' }}>
-          {statusMessage}
-        </div>
-      )}
+        {statusMessage && (
+          <div className="animate-fade-in" style={{ marginTop: '2rem', padding: '1.5rem', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--success-bg)', border: '1px solid #a7f3d0', color: 'var(--success-color)', fontWeight: '600', maxWidth: '600px', margin: '2rem auto 0 auto' }}>
+            {statusMessage}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
