@@ -48,7 +48,7 @@ export default function App() {
                 <span className="badge-admin">Admin</span>
                 <button className={`nav-btn ${currentView === 'dashboard' ? 'active' : ''}`} onClick={() => setCurrentView('dashboard')}>Dashboard</button>
                 <button className={`nav-btn ${currentView === 'import' ? 'active' : ''}`} onClick={() => setCurrentView('import')}>Import</button>
-                <button className={`nav-btn ${currentView === 'historique' ? 'active' : ''}`} onClick={() => setCurrentView('historique')}>Historique</button>
+                <button className={`nav-btn ${currentView === 'historique' ? 'active' : ''}`} onClick={() => setCurrentView('historique')}>Historique Détailler</button>
                 <button className="btn btn-danger btn-sm" onClick={() => setCurrentView('reset')}>Reset</button>
                 <button className="btn btn-secondary btn-sm" onClick={() => { localStorage.removeItem('bo_token'); setAuthToken(null); setCurrentView('front_liste'); }}>Quitter</button>
               </div>
