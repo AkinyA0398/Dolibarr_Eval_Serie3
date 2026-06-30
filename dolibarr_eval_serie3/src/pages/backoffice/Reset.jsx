@@ -15,10 +15,10 @@ export default function Reset() {
     try {
       console.log("⏳ Lancement de la purge sur l'API Dolibarr...");
       await apiDolibarr.resetAllData();
-      console.log(" Purge réussie !");
+      console.log("✅ Purge réussie !");
       setMessage('Succès : Toutes les données simulées ont été purgées avec succès.');
     } catch (error) {
-      console.error(" Erreur pendant le reset :", error);
+      console.error("❌ Erreur pendant le reset :", error);
       setMessage(`Erreur : ${error.message || 'Impossible de réinitialiser les données.'}`);
     } finally {
       setLoading(false);
@@ -36,7 +36,7 @@ export default function Reset() {
       {!showConfirmStep && !loading && (
         <button 
           onClick={() => {
-            console.log(" Le bouton Réinitialiser initial a été cliqué !");
+            console.log("🔘 Le bouton Réinitialiser initial a été cliqué !");
             setShowConfirmStep(true);
           }} 
           style={{
@@ -63,7 +63,7 @@ export default function Reset() {
           maxWidth: '450px'
         }}>
           <p style={{ color: '#c53030', fontWeight: 'bold', marginTop: 0 }}>
-            ️ Action Irréversible ! Confirmez-vous la suppression globale ?
+            ⚠️ Action Irréversible ! Confirmez-vous la suppression globale ?
           </p>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button 

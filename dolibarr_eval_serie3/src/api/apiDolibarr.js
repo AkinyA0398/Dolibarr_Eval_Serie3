@@ -96,12 +96,21 @@ export const apiDolibarr = {
   // 3. Récupérer la liste des salaires (Hybride Dolibarr + Stockage Local)
   getSalaires: async () => {
     try {
-      const [dolibarrSalaries, dolibarrPayments] = await Promise.all([
-        apiClient('/salaries?limit=100').catch(() => []),
-        apiClient('/salaries/payments?limit=500').catch(() => [])
+      // L'endpoint /salaries/payments retourne une erreur 400 sous Dolibarr v23.0.3.
+      // Pour éviter l'erreur XHR dans la console du navigateur, on ne fait pas l'appel et on simule un tableau vide.
+      const [dolibarrSalaries, employes] = await Promise.all([
+        apiClient('/salaries?limit=100', { silent: true }).catch(() => []),
+        apiDolibarr.getEmployes()
       ]);
+      const dolibarrPayments = [];
 
-      const salariesWithPayments = dolibarrSalaries.map(sal => {
+      // Filtrer les salaires pour ne garder que ceux dont l'employé existe encore
+      // (Permet de masquer les fiches orphelines bloquées dans Dolibarr après un Reset)
+      const validSalaries = dolibarrSalaries.filter(sal => {
+        return employes.some(emp => Number(emp.id || emp.rowid) === Number(sal.fk_user));
+      });
+
+      const salariesWithPayments = validSalaries.map(sal => {
         const paymentsForSal = dolibarrPayments.filter(p => Number(p.fk_salary) === Number(sal.id || sal.rowid));
         
         return {
@@ -159,27 +168,9 @@ export const apiDolibarr = {
       console.log(" Cache local des salaires vidé.");
 
       // --- ÉTAPE 1 : Suppression des fiches de salaires ---
-      const salaires = await apiClient('/salaries?limit=200').catch(() => []);
-      
-      if (salaires && salaires.length > 0) {
-        console.log(`Suppression de ${salaires.length} fiches de salaires de test dans Dolibarr...`);
-        for (const sal of salaires) {
-          const id = sal.rowid || sal.id;
-          if (!id) {
-            console.warn('Salaire sans ID, ignoré.', sal);
-            continue;
-          }
-          try {
-            await apiClient(`/salaries/${id}`, { method: 'DELETE' });
-            console.log(`Salaire ID ${id} supprimé.`);
-          } catch (delErr) {
-            // 404 = déjà absent ou endpoint non supporté → on continue
-            console.warn(`Impossible de supprimer le salaire ID ${id} (ignoré) :`, delErr.message);
-          }
-        }
-      } else {
-        console.log('Aucune fiche de salaire à vider.');
-      }
+      // L'API Dolibarr (v23.0.3) ne supporte pas la méthode DELETE pour /salaries (retourne une erreur 404).
+      // Nous ignorons donc la suppression côté Dolibarr pour éviter les erreurs dans la console.
+      console.log('La suppression des fiches de salaires via l\'API n\'est pas supportée par Dolibarr, nettoyage ignoré côté serveur.');
 
       // --- ÉTAPE 2 : Suppression des employés importés ---
       const employes = await apiClient('/users?limit=200').catch(() => []);
@@ -200,7 +191,7 @@ export const apiDolibarr = {
           }
 
           try {
-            await apiClient(`/users/${id}`, { method: 'DELETE' });
+            await apiClient(`/users/${id}`, { method: 'DELETE', silent: true });
             console.log(`Employé '${emp.login}' (ID ${id}) supprimé de Dolibarr.`);
           } catch (delErr) {
             // 404 = déjà absent ou endpoint non supporté → on continue

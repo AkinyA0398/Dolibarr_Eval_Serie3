@@ -28,7 +28,9 @@ export const apiClient = async (endpoint, options = {}) => {
     
     return await response.json();
   } catch (error) {
-    console.error(`Erreur lors de l'appel à ${endpoint}:`, error);
+    if (!options.silent) {
+      console.error(`Erreur lors de l'appel à ${endpoint}:`, error);
+    }
     throw error;
   }
 };
