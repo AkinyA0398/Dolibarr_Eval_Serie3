@@ -1,4 +1,4 @@
-// src/App.jsx (Version Finale)
+// src/App.jsx (Version Finale Corrigée)
 import React, { useState } from 'react';
 import Login from './pages/backoffice/Login.jsx';
 import Dashboard from './pages/backoffice/Dashboard.jsx';
@@ -6,6 +6,7 @@ import Import from './pages/backoffice/Import.jsx';
 import Reset from './pages/backoffice/Reset.jsx';
 import ListeSalaries from './pages/frontoffice/ListeSalaries.jsx';
 import GestionSalaire from './pages/frontoffice/GestionSalaire.jsx';
+import HistoriqueSalaires from './pages/frontoffice/HistoriqueSalaires';
 
 export default function App() {
   const [authToken, setAuthToken] = useState(localStorage.getItem('bo_token') || null);
@@ -47,6 +48,7 @@ export default function App() {
                 <span className="badge-admin">Admin</span>
                 <button className={`nav-btn ${currentView === 'dashboard' ? 'active' : ''}`} onClick={() => setCurrentView('dashboard')}>Dashboard</button>
                 <button className={`nav-btn ${currentView === 'import' ? 'active' : ''}`} onClick={() => setCurrentView('import')}>Import</button>
+                <button className={`nav-btn ${currentView === 'historique' ? 'active' : ''}`} onClick={() => setCurrentView('historique')}>Historique</button>
                 <button className="btn btn-danger btn-sm" onClick={() => setCurrentView('reset')}>Reset</button>
                 <button className="btn btn-secondary btn-sm" onClick={() => { localStorage.removeItem('bo_token'); setAuthToken(null); setCurrentView('front_liste'); }}>Quitter</button>
               </div>
@@ -61,6 +63,11 @@ export default function App() {
         {currentView === 'dashboard' && <Dashboard />}
         {currentView === 'import' && <Import />}
         {currentView === 'reset' && <Reset />}
+        
+        {/* Gestion de la vue Historique */}
+        {currentView === 'historique' && (
+          <HistoriqueSalaires onBack={() => { setCurrentView('front_liste'); setSelectedEmploye(null); }} />
+        )}
         
         {currentView === 'front_liste' && (
           !selectedEmploye ? (
