@@ -18,13 +18,17 @@ export const parseEmployes = (csvText) => {
 };
 
 export const parseSalaires = (csvText) => {
-  const lines = csvText.trim().split('\n');
+  // Filtrer les lignes vides avant de traiter
+  const lines = csvText.trim().split('\n').filter(l => l.trim());
   
-  return lines.slice(1).map(line => {
-    // On sépare d'abord la partie clean avant le champ "paiement"
-    // Le champ paiement commence par {[ ou est juste un nombre (comme la ligne 4)
+  return lines.slice(1).map((line, lineIndex) => {
+    // On sépare la partie clean. Le champ paiement peut contenir des virgules
+    // donc on utilise une regex qui capture tout ce qui reste après les 5 premiers champs.
     const match = line.match(/^(\d+),(\d+),([^,]+),([^,]+),(\d+),(.*)$/);
-    if (!match) return null;
+    if (!match) {
+      console.warn(`[Parser CSV] Ligne ${lineIndex + 2} ignorée (format invalide) : "${line}"`);
+      return null;
+    }
 
     const [_, ref_salaire, ref_employe, date_debut, date_fin, montant, paiementRaw] = match;
 
@@ -32,29 +36,42 @@ export const parseSalaires = (csvText) => {
     const cleanPaiementRaw = paiementRaw.trim();
 
     if (cleanPaiementRaw.startsWith('{')) {
-      // Format alternatif complexe : {["08/03/26",890],["08/03/26",300]}
-      // On extrait ce qu'il y a entre les crochets [ ]
+      // Format complexe : {["08/03/26",890],["08/03/26",300]}
+      // On extrait chaque groupe entre crochets [ ]
       const bracketMatches = cleanPaiementRaw.match(/\[([^\]]+)\]/g);
       if (bracketMatches) {
         paiements = bracketMatches.map(b => {
           // b ressemble à ["08/03/26",480]
-          const cleanB = b.replace(/[\[\]"]/g, ''); // "08/03/26,480"
-          const [date, val] = cleanB.split(',');
-          return { date, montant: parseFloat(val) };
-        });
+          const cleanB = b.replace(/[\[\]"]/g, ''); // → "08/03/26,480"
+          const parts = cleanB.split(',');
+          let dateStr = (parts[0] || '').trim();
+          const val = parseFloat((parts[1] || '0').trim());
+          
+          // Normaliser les années à 2 chiffres → 4 chiffres (ex: "26" → "2026")
+          if (dateStr) {
+            const dateParts = dateStr.split('/');
+            if (dateParts.length === 3 && dateParts[2].length === 2) {
+              dateParts[2] = `20${dateParts[2]}`;
+              dateStr = dateParts.join('/');
+            }
+          }
+          
+          return { date: dateStr, montant: val };
+        }).filter(p => p.montant > 0); // Ignorer les paiements à 0 €
       }
-    } else {
-      // Cas simple (ex: juste un montant direct ou un seul paiement)
-      if (cleanPaiementRaw && !isNaN(cleanPaiementRaw)) {
-        paiements = [{ date: date_fin, montant: parseFloat(cleanPaiementRaw) }];
-      }
+    } else if (cleanPaiementRaw && !isNaN(cleanPaiementRaw)) {
+      // Cas simple : juste un montant direct → payé à la date de fin
+      paiements = [{ date: date_fin.trim(), montant: parseFloat(cleanPaiementRaw) }];
     }
+    // Sinon (champ vide) → paiements reste []
+    
+    console.log(`[Parser CSV] Ligne ${lineIndex + 2} → ref_sal=${ref_salaire}, ref_emp=${ref_employe}, montant=${montant}€, paiements:`, paiements);
 
     return {
       ref_salaire: parseInt(ref_salaire),
       ref_employe: parseInt(ref_employe),
-      date_debut,
-      date_fin,
+      date_debut: date_debut.trim(),
+      date_fin: date_fin.trim(),
       montant: parseFloat(montant),
       paiements
     };
