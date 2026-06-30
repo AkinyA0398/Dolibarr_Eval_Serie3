@@ -77,6 +77,22 @@ export default function HistoriqueSalaires({ onBack }) {
   const [expandedId, setExpandedId] = useState(null);
   const [searchNom, setSearchNom] = useState('');
 
+  // Noms des mois en dur pour éviter tout problème avec l'objet Date
+  const nomsMois = [
+    { value: '01', label: 'Janvier' },
+    { value: '02', label: 'Février' },
+    { value: '03', label: 'Mars' },
+    { value: '04', label: 'Avril' },
+    { value: '05', label: 'Mai' },
+    { value: '06', label: 'Juin' },
+    { value: '07', label: 'Juillet' },
+    { value: '08', label: 'Août' },
+    { value: '09', label: 'Septembre' },
+    { value: '10', label: 'Octobre' },
+    { value: '11', label: 'Novembre' },
+    { value: '12', label: 'Décembre' }
+  ];
+
   useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -104,17 +120,6 @@ export default function HistoriqueSalaires({ onBack }) {
     return sal.label || `Employé #${fkUser}`;
   };
 
-  // Extraire la liste des mois disponibles
-  const moisDisponibles = [...new Set(
-    salaires
-      .map(s => {
-        const dateObj = parseDateString(s.date_debut || s.datep);
-        if (!dateObj) return null;
-        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
-      })
-      .filter(Boolean)
-  )].sort().reverse();
-
   // Filtrage
   const salFiltres = salaires.filter(s => {
     const fkUser = s.fk_user || s.ref_employe;
@@ -124,9 +129,13 @@ export default function HistoriqueSalaires({ onBack }) {
     
     let matchMois = true;
     if (selectedMois !== 'tous') {
-      const dateObj = parseDateString(s.date_debut || s.datep);
+      let dateObj = parseDateString(s.date_debut || s.datep);
+      if (!dateObj && (s.date_fin || s.dateep)) {
+        dateObj = parseDateString(s.date_fin || s.dateep);
+      }
+
       if (dateObj) {
-        const moisStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+        const moisStr = String(dateObj.getMonth() + 1).padStart(2, '0');
         matchMois = moisStr === selectedMois;
       } else {
         matchMois = false;
@@ -135,7 +144,7 @@ export default function HistoriqueSalaires({ onBack }) {
     return matchEmp && matchNom && matchMois;
   });
 
-  // Stats globales harmonisées (Prend en compte amount OU montant)
+  // Stats globales
   const totalDu = salFiltres.reduce((acc, s) => acc + (Number(s.amount || s.montant) || 0), 0);
   
   const totalVerse = salFiltres.reduce((acc, s) => {
@@ -212,11 +221,9 @@ export default function HistoriqueSalaires({ onBack }) {
             <label>Filtrer par mois</label>
             <select value={selectedMois} onChange={e => setSelectedMois(e.target.value)}>
               <option value="tous">Tous les mois</option>
-              {moisDisponibles.map(m => {
-                const [year, month] = m.split('-');
-                const label = new Date(Number(year), Number(month) - 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-                return <option key={m} value={m}>{label}</option>;
-              })}
+              {nomsMois.map(m => (
+                <option key={m.value} value={m.value}>{m.label}</option>
+              ))}
             </select>
           </div>
           <div>
@@ -287,13 +294,10 @@ export default function HistoriqueSalaires({ onBack }) {
                       <td>
                         <div style={{ fontSize: '0.875rem' }}>
                           {(() => {
-                            // 1. Tente de lire et de formater la date de début d'origine
                             const rawStart = sal.date_debut || sal.datep;
                             const formattedStart = formatDate(rawStart);
                             if (formattedStart !== '—') return formattedStart;
 
-                            // 2. Fallback intelligent : si la date de fin est disponible (ex: "08/03/2026" ou "2026-03-08")
-                            // on extrait le mois et l'année pour déduire le premier jour du mois correspondant.
                             const rawEnd = sal.date_fin || sal.dateep;
                             if (rawEnd) {
                               const endObj = parseDateString(rawEnd);
