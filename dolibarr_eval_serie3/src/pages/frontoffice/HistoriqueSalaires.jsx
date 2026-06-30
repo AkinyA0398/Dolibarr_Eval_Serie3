@@ -86,7 +86,7 @@ export default function HistoriqueSalaires({ onBack }) {
   const moisDisponibles = [...new Set(
     salaires
       .map(s => {
-        const d = s.datep || s.date_debut;
+        const d = s.date_debut || s.datep || s.datedeb;
         if (!d) return null;
         const date = !isNaN(d) ? new Date(Number(d) * 1000) : new Date(d);
         if (isNaN(date)) return null;
@@ -101,7 +101,7 @@ export default function HistoriqueSalaires({ onBack }) {
     const nom = getNomEmploye(s).toLowerCase();
     const matchEmp = selectedEmployeId === 'tous' || String(fkUser) === selectedEmployeId;
     const matchNom = nom.includes(searchNom.toLowerCase());
-    const d = s.datep || s.date_debut;
+    const d = s.date_debut || s.datep || s.datedeb;
     let matchMois = true;
     if (selectedMois !== 'tous' && d) {
       const date = !isNaN(d) ? new Date(Number(d) * 1000) : new Date(d);
@@ -114,7 +114,7 @@ export default function HistoriqueSalaires({ onBack }) {
   });
 
   // Stats globales sur les données filtrées
-  const totalDu = salFiltres.reduce((acc, s) => acc + (Number(s.amount) || 0), 0);
+  const totalDu = salFiltres.reduce((acc, s) => acc + (Number(s.amount || s.montant) || 0), 0);
   const totalVerse = salFiltres.reduce((acc, s) => {
     const paiements = s.paiements || [];
     return acc + paiements.reduce((a, p) => a + (Number(p.montant) || 0), 0);
@@ -122,7 +122,7 @@ export default function HistoriqueSalaires({ onBack }) {
   const totalReste = totalDu - totalVerse;
   const fichesSoldees = salFiltres.filter(s => {
     const paid = (s.paiements || []).reduce((a, p) => a + (Number(p.montant) || 0), 0);
-    return paid >= (Number(s.amount) || 0);
+    return paid >= (Number(s.amount || s.montant) || 0);
   }).length;
 
   if (loading) {
@@ -229,7 +229,7 @@ export default function HistoriqueSalaires({ onBack }) {
                 const nom = getNomEmploye(sal);
                 const paiements = sal.paiements || [];
                 const totalPaye = paiements.reduce((a, p) => a + (Number(p.montant) || 0), 0);
-                const montant = Number(sal.amount) || 0;
+                const montant = Number(sal.amount || sal.montant) || 0;
                 const isExpanded = expandedId === id;
                 const initiale = nom.charAt(0).toUpperCase();
 
@@ -260,11 +260,11 @@ export default function HistoriqueSalaires({ onBack }) {
                       </td>
                       <td>
                         <div style={{ fontSize: '0.875rem' }}>
-                          {formatDate(sal.datep || sal.date_debut)}
+                          {formatDate(sal.date_debut || sal.datep || sal.datedeb)}
                         </div>
-                        {(sal.dateep || sal.date_fin) && (
+                        {(sal.date_fin || sal.dateep || sal.datefin) && (
                           <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                            au {formatDate(sal.dateep || sal.date_fin)}
+                            au {formatDate(sal.date_fin || sal.dateep || sal.datefin)}
                           </div>
                         )}
                       </td>
