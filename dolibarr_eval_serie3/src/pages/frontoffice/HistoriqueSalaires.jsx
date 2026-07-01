@@ -3,20 +3,16 @@ import React, { useState, useEffect } from 'react';
 import { apiDolibarr } from '../../api/apiDolibarr';
 
 // --- Helpers ---
-// Parseur robuste pour transformer "JJ/MM/AAAA", "AAAA-MM-JJ" ou Timestamp en Date valide
 const parseDateString = (dateStr) => {
   if (!dateStr) return null;
-  if (!isNaN(dateStr)) return new Date(Number(dateStr) * 1000); // Timestamp
+  if (!isNaN(dateStr)) return new Date(Number(dateStr) * 1000);
 
   if (typeof dateStr === 'string') {
-    // 1. Format ISO "YYYY-MM-DD" (renvoyé par Dolibarr après formatage)
     if (dateStr.includes('-')) {
-      const cleanStr = dateStr.split(' ')[0]; // Retire les heures si présentes
+      const cleanStr = dateStr.split(' ')[0];
       const [year, month, day] = cleanStr.split('-');
       return new Date(Number(year), Number(month) - 1, Number(day));
     }
-    
-    // 2. Format Français "JJ/MM/AAAA" (CSV direct)
     if (dateStr.includes('/')) {
       const [day, month, year] = dateStr.split('/');
       return new Date(Number(year), Number(month) - 1, Number(day));
@@ -74,10 +70,10 @@ export default function HistoriqueSalaires({ onBack }) {
   const [loading, setLoading] = useState(true);
   const [selectedEmployeId, setSelectedEmployeId] = useState('tous');
   const [selectedMois, setSelectedMois] = useState('tous');
+  const [selectedPoste, setSelectedPoste] = useState('tous'); // ✨ État pour le filtre poste
   const [expandedId, setExpandedId] = useState(null);
   const [searchNom, setSearchNom] = useState('');
 
-  // Noms des mois en dur pour éviter tout problème avec l'objet Date
   const nomsMois = [
     { value: '01', label: 'Janvier' },
     { value: '02', label: 'Février' },
@@ -112,6 +108,18 @@ export default function HistoriqueSalaires({ onBack }) {
     load();
   }, []);
 
+  // Helper: Extraire le poste d'un employé (depuis .job ou la note_private)
+  const getPosteEmploye = (fkUser) => {
+    const emp = employes.find(e => String(e.id || e.rowid || e.ref_employe) === String(fkUser));
+    if (!emp) return '—';
+    if (emp.job) return emp.job;
+    if (emp.note_private) {
+      const matchPoste = emp.note_private.match(/Poste:\s*([^,]+)/);
+      if (matchPoste) return matchPoste[1].trim();
+    }
+    return 'Non spécifié';
+  };
+
   // Helper: trouver nom employé
   const getNomEmploye = (sal) => {
     const fkUser = sal.fk_user || sal.ref_employe;
@@ -120,12 +128,25 @@ export default function HistoriqueSalaires({ onBack }) {
     return sal.label || `Employé #${fkUser}`;
   };
 
-  // Filtrage
+  // Extraire la liste unique des postes pour alimenter le sélecteur de filtre
+  const listePostesUnique = ['tous', ...new Set(employes.map(e => {
+    if (e.job) return e.job;
+    if (e.note_private) {
+      const matchPoste = e.note_private.match(/Poste:\s*([^,]+)/);
+      if (matchPoste) return matchPoste[1].trim();
+    }
+    return 'Non spécifié';
+  }).filter(Boolean))];
+
+  // Filtrage cumulatif
   const salFiltres = salaires.filter(s => {
     const fkUser = s.fk_user || s.ref_employe;
     const nom = getNomEmploye(s).toLowerCase();
+    const poste = getPosteEmploye(fkUser);
+
     const matchEmp = selectedEmployeId === 'tous' || String(fkUser) === selectedEmployeId;
     const matchNom = nom.includes(searchNom.toLowerCase());
+    const matchPoste = selectedPoste === 'tous' || poste === selectedPoste; // ✨ Logique filtre poste
     
     let matchMois = true;
     if (selectedMois !== 'tous') {
@@ -141,7 +162,7 @@ export default function HistoriqueSalaires({ onBack }) {
         matchMois = false;
       }
     }
-    return matchEmp && matchNom && matchMois;
+    return matchEmp && matchNom && matchMois && matchPoste;
   });
 
   // Stats globales
@@ -197,7 +218,7 @@ export default function HistoriqueSalaires({ onBack }) {
       {/* Filtres */}
       <div className="card" style={{ marginBottom: '1.5rem', padding: '1rem' }}>
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-          <div style={{ flex: '1 1 200px' }}>
+          <div style={{ flex: '1 1 180px' }}>
             <label>Recherche par nom</label>
             <input
               type="text"
@@ -217,7 +238,16 @@ export default function HistoriqueSalaires({ onBack }) {
               ))}
             </select>
           </div>
+          {/* ✨ NOUVEAU FILTRE : Poste */}
           <div style={{ flex: '1 1 160px' }}>
+            <label>Filtrer par poste</label>
+            <select value={selectedPoste} onChange={e => setSelectedPoste(e.target.value)}>
+              {listePostesUnique.map(p => (
+                <option key={p} value={p}>{p === 'tous' ? 'Tous les postes' : p}</option>
+              ))}
+            </select>
+          </div>
+          <div style={{ flex: '1 1 140px' }}>
             <label>Filtrer par mois</label>
             <select value={selectedMois} onChange={e => setSelectedMois(e.target.value)}>
               <option value="tous">Tous les mois</option>
@@ -229,7 +259,7 @@ export default function HistoriqueSalaires({ onBack }) {
           <div>
             <button
               className="btn btn-secondary btn-sm"
-              onClick={() => { setSearchNom(''); setSelectedEmployeId('tous'); setSelectedMois('tous'); }}
+              onClick={() => { setSearchNom(''); setSelectedEmployeId('tous'); setSelectedMois('tous'); setSelectedPoste('tous'); }}
             >
               Réinitialiser
             </button>
@@ -249,6 +279,7 @@ export default function HistoriqueSalaires({ onBack }) {
             <thead>
               <tr>
                 <th style={{ paddingLeft: '1.25rem' }}>Employé</th>
+                <th>Poste</th> {/* ✨ NOUVELLE COLONNE : Entête de poste */}
                 <th>Période</th>
                 <th style={{ textAlign: 'right' }}>Montant Échu</th>
                 <th style={{ textAlign: 'right' }}>Total Versé</th>
@@ -259,7 +290,10 @@ export default function HistoriqueSalaires({ onBack }) {
             <tbody>
               {salFiltres.map((sal) => {
                 const id = sal.id || sal.rowid || sal.ref_salaire || Math.random();
+                const fkUser = sal.fk_user || sal.ref_employe;
                 const nom = getNomEmploye(sal);
+                const poste = getPosteEmploye(fkUser); 
+                
                 const paiements = Array.isArray(sal.paiements) ? sal.paiements : [];
                 const totalPaye = paiements.reduce((a, p) => a + (Number(p.montant) || 0), 0);
                 const montant = Number(sal.amount || sal.montant) || 0;
@@ -268,7 +302,6 @@ export default function HistoriqueSalaires({ onBack }) {
 
                 return (
                   <React.Fragment key={id}>
-                    {/* Ligne principale */}
                     <tr style={{ transition: 'background 0.15s' }}
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-color)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
@@ -291,6 +324,12 @@ export default function HistoriqueSalaires({ onBack }) {
                           </div>
                         </div>
                       </td>
+                      <td style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>
+                        <span style={{ background: 'var(--bg-color)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>
+                          {poste}
+                        </span>
+                      </td>
+
                       <td>
                         <div style={{ fontSize: '0.875rem' }}>
                           {(() => {
@@ -334,13 +373,14 @@ export default function HistoriqueSalaires({ onBack }) {
                       </td>
                     </tr>
 
-                    {/* Ligne de détail expandable */}
+                    {/* Ligne expandable de détails */}
                     {isExpanded && (
                       <tr>
-                        <td colSpan={6} style={{ padding: 0, background: 'var(--bg-color)' }}>
+                        {/* Remplacez colSpan={6} par colSpan={7} pour inclure la nouvelle colonne du tableau */}
+                        <td colSpan={7} style={{ padding: 0, background: 'var(--bg-color)' }}>
                           <div style={{ padding: '1.25rem 1.5rem', borderTop: '2px solid var(--accent-color)' }}>
                             <h4 style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem' }}>
-                              Détail des versements — {nom}
+                              Détail des versements — {nom} ({poste})
                             </h4>
 
                             {paiements.length === 0 ? (

@@ -1,4 +1,4 @@
-// src/App.jsx (Version Finale Corrigée)
+// src/App.jsx 
 import React, { useState } from 'react';
 import Login from './pages/backoffice/Login.jsx';
 import Dashboard from './pages/backoffice/Dashboard.jsx';
@@ -7,6 +7,7 @@ import Reset from './pages/backoffice/Reset.jsx';
 import ListeSalaries from './pages/frontoffice/ListeSalaries.jsx';
 import GestionSalaire from './pages/frontoffice/GestionSalaire.jsx';
 import HistoriqueSalaires from './pages/frontoffice/HistoriqueSalaires';
+import GenerationSalaires from './pages/frontoffice/GenerationSalaire.jsx'; 
 
 export default function App() {
   const [authToken, setAuthToken] = useState(localStorage.getItem('bo_token') || null);
@@ -49,6 +50,7 @@ export default function App() {
                 <button className={`nav-btn ${currentView === 'dashboard' ? 'active' : ''}`} onClick={() => setCurrentView('dashboard')}>Dashboard</button>
                 <button className={`nav-btn ${currentView === 'import' ? 'active' : ''}`} onClick={() => setCurrentView('import')}>Import</button>
                 <button className={`nav-btn ${currentView === 'historique' ? 'active' : ''}`} onClick={() => setCurrentView('historique')}>Historique Détailler</button>
+                <button className={`nav-btn ${currentView === 'generation' ? 'active' : ''}`} onClick={() => setCurrentView('generation')}>Generation Salaire</button>
                 <button className="btn btn-danger btn-sm" onClick={() => setCurrentView('reset')}>Reset</button>
                 <button className="btn btn-secondary btn-sm" onClick={() => { localStorage.removeItem('bo_token'); setAuthToken(null); setCurrentView('front_liste'); }}>Quitter</button>
               </div>
@@ -67,6 +69,11 @@ export default function App() {
         {/* Gestion de la vue Historique */}
         {currentView === 'historique' && (
           <HistoriqueSalaires onBack={() => { setCurrentView('front_liste'); setSelectedEmploye(null); }} />
+        )}
+
+        {/* ✨ GESTION MANQUANTE : Rendu de la page de génération collective de salaires */}
+        {currentView === 'generation' && (
+          <GenerationSalaires onBack={() => { setCurrentView('front_liste'); setSelectedEmploye(null); }} />
         )}
         
         {currentView === 'front_liste' && (

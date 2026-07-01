@@ -67,7 +67,7 @@ export default function GestionSalaire({ employe, onBack }) {
       <div className="card">
         <div className="card-header">
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontSize: '1.5rem' }}>💳</span> Rémunération : {employe.lastname || employe.nom}
+            Rémunération : {employe.lastname || employe.nom}
           </h2>
           <p className="text-sm text-muted">Édition de la fiche de salaire et enregistrement des versements</p>
         </div>
@@ -76,17 +76,17 @@ export default function GestionSalaire({ employe, onBack }) {
           {/* Période de paie */}
           <div className="flex gap-4 mb-4">
             <div className="w-full">
-              <label>📅 Période du</label>
+              <label>Période du</label>
               <input type="date" value={dateDebut} onChange={e => setDateDebut(e.target.value)} required />
             </div>
             <div className="w-full">
-              <label>📅 Période au</label>
+              <label>Période au</label>
               <input type="date" value={dateFin} onChange={e => setDateFin(e.target.value)} required />
             </div>
           </div>
 
           <div className="mb-4">
-            <label>💰 Montant Total Échu (€)</label>
+            <label>Montant Total Échu (€)</label>
             <input 
               type="number" 
               value={montantTotal} 
@@ -100,7 +100,7 @@ export default function GestionSalaire({ employe, onBack }) {
           {/* Registre des versements */}
           <div style={{ background: 'var(--bg-gradient-start)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '1.5rem', marginBottom: '1.5rem' }}>
             <h4 style={{ marginBottom: '1rem', fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span>🧾</span> Registre des Versements
+               Registre des Versements
             </h4>
             
             <table className="compact-table mb-4" style={{ background: 'transparent' }}>
@@ -155,7 +155,7 @@ export default function GestionSalaire({ employe, onBack }) {
           </div>
 
           <button type="submit" className="btn btn-primary w-full" style={{ padding: '0.85rem', fontSize: '1.1rem', marginTop: '1rem' }}>
-            ✅ Valider et Synchroniser avec Dolibarr
+            Valider et Synchroniser avec Dolibarr
           </button>
         </form>
       </div>

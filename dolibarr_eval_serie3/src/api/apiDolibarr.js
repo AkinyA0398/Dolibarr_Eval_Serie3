@@ -15,13 +15,20 @@ export const apiDolibarr = {
   // 1. Importer ou créer un employé dans Dolibarr
   createEmploye: async (employeData) => {
     const payload = {
-      login: employeData.identifiant,
-      lastname: employeData.nom,
-      firstname: '',
-      gender: employeData.genre === 'homme' ? 'man' : 'woman',
-      password: employeData.mdp,
-      note_private: `Ref externe: ${employeData.ref_employe}, Heures/semaine: ${employeData.heure_travail_semaine}`
-    };
+  login: employeData.identifiant,
+  lastname: employeData.nom,
+  firstname: employeData.prenom || '',
+  gender: employeData.genre === 'homme' ? 'man' : 'woman',
+  password: employeData.mdp,
+  
+  // On tente les deux clés courantes de l'API Dolibarr pour le poste
+  job: employeData.poste,         
+  position: employeData.poste,    
+  
+  statut: 1,
+  // La note privée est TOUJOURS enregistrée par Dolibarr
+  note_private: `Ref externe: ${employeData.ref_employe}, Poste: ${employeData.poste}, Heures/semaine: ${employeData.heure_travail_semaine}`
+};
     
     return apiClient('/users', {
       method: 'POST',

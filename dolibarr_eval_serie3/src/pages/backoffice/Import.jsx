@@ -67,6 +67,16 @@ export default function Import() {
 
       console.log("️ Table de correspondance des IDs finale :", idMapping);
 
+      const postesMapping = {};
+      employes.forEach(emp => {
+        const csvRef = String(emp.ref_employe || emp.id || emp.identifiant || '').trim();
+        const vraiIdDolibarr = idMapping[csvRef];
+        if (vraiIdDolibarr && emp.poste) {
+          postesMapping[vraiIdDolibarr] = emp.poste;
+        }
+      });
+      localStorage.setItem('mapping_postes_employes', JSON.stringify(postesMapping)); // Sauvegarde locale
+
       // 2. Injection des fiches de salaires avec les bons IDs, le genre nettoyé et les paiements
       setStatusMessage(`Injection des fiches de salaires (0/${salaires.length})...`);
       let countSal = 0;

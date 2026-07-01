@@ -29,10 +29,13 @@ export const createEmploye = async (employeData) => {
       firstname: employeData.prenom || '',
       gender: employeData.genre === 'homme' ? 'man' : 'woman',
       password: employeData.mdp,
-      job: employeData.poste, // ✨ Injecte directement le poste dans le champ natif de Dolibarr
-      statut: 1, // Utilisateur actif par défaut
+      job: employeData.poste, // 👈 Doit être une chaîne (ex: "Comptable")
+      statut: 1, 
+      // En secours, on l'écrit en dur dans la note privée
       note_private: `Ref externe: ${employeData.ref_employe}, Poste: ${employeData.poste}, Heures/semaine: ${employeData.heure_travail_semaine}`
     };
+
+    console.log("Envoi du payload employé à Dolibarr :", payload);
 
     return await apiClient('/users', {
       method: 'POST',
