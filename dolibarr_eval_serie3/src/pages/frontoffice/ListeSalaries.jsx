@@ -9,14 +9,28 @@ export default function ListeSalaries({ onSelectEmploye }) {
   // États pour la recherche multi-critères
   const [searchNom, setSearchNom] = useState('');
   const [searchGenre, setSearchGenre] = useState('tous');
+  const [searchPoste, setSearchPoste] = useState('tous'); // ✨ État pour le filtre poste
   const [searchHeures, setSearchHeures] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const data = await apiDolibarr.getEmployes();
-        // Adaptation si Dolibarr renvoie un tableau d'utilisateurs
-        setEmployes(data || []);
+        
+        // Formatage initial pour normaliser l'extraction des postes et heures
+        const listFormatee = (data || []).map(e => {
+          let posteExtrait = e.job || '';
+          if (!posteExtrait && e.note_private) {
+            const matchPoste = e.note_private.match(/Poste:\s*([^,]+)/);
+            if (matchPoste) posteExtrait = matchPoste[1].trim();
+          }
+          return {
+            ...e,
+            posteNormalise: posteExtrait || 'Non spécifié'
+          };
+        });
+
+        setEmployes(listFormatee);
       } catch (err) {
         console.error("Erreur lors de la récupération des employés", err);
       } finally {
@@ -26,6 +40,9 @@ export default function ListeSalaries({ onSelectEmploye }) {
     fetchData();
   }, []);
 
+  // Extraction dynamique de la liste unique des postes pour le sélecteur HTML
+  const listePostesUnique = ['tous', ...new Set(employes.map(e => e.posteNormalise).filter(Boolean))];
+
   // Logique de filtrage multi-critères
   const employesFiltres = employes.filter(emp => {
     const nom = emp.lastname || emp.nom || '';
@@ -33,6 +50,7 @@ export default function ListeSalaries({ onSelectEmploye }) {
     const note = emp.note_private || '';
     
     const matchNom = nom.toLowerCase().includes(searchNom.toLowerCase());
+    const matchPoste = searchPoste === 'tous' || emp.posteNormalise === searchPoste; // ✨ Logique filtre poste
     
     let matchGenre = true;
     if (searchGenre !== 'tous') {
@@ -44,7 +62,7 @@ export default function ListeSalaries({ onSelectEmploye }) {
       matchHeures = note.includes(`Heures/semaine: ${searchHeures}`) || (emp.heure_travail_semaine?.toString() === searchHeures);
     }
 
-    return matchNom && matchGenre && matchHeures;
+    return matchNom && matchGenre && matchPoste && matchHeures;
   });
 
   if (loading) return (
@@ -77,7 +95,18 @@ export default function ListeSalaries({ onSelectEmploye }) {
           <label>🔍 Recherche par nom</label>
           <input type="text" value={searchNom} onChange={e => setSearchNom(e.target.value)} placeholder="Saisir un nom..." />
         </div>
-        <div style={{ width: '150px' }}>
+        
+        {/* ✨ NOUVEAU FILTRE : Sélection par Poste */}
+        <div style={{ flex: '1 1 160px' }}>
+          <label>💼 Poste / Métier</label>
+          <select value={searchPoste} onChange={e => setSearchPoste(e.target.value)}>
+            {listePostesUnique.map(p => (
+              <option key={p} value={p}>{p === 'tous' ? 'Tous les postes' : p}</option>
+            ))}
+          </select>
+        </div>
+
+        <div style={{ width: '130px' }}>
           <label>👤 Genre</label>
           <select value={searchGenre} onChange={e => setSearchGenre(e.target.value)}>
             <option value="tous">Tous</option>
@@ -85,7 +114,7 @@ export default function ListeSalaries({ onSelectEmploye }) {
             <option value="femme">Femme</option>
           </select>
         </div>
-        <div style={{ width: '150px' }}>
+        <div style={{ width: '130px' }}>
           <label>⏱️ Heures / Sem.</label>
           <input type="number" value={searchHeures} onChange={e => setSearchHeures(e.target.value)} placeholder="Ex: 35" />
         </div>
@@ -97,6 +126,7 @@ export default function ListeSalaries({ onSelectEmploye }) {
           <thead>
             <tr>
               <th>Salarié</th>
+              <th>Poste</th> {/* ✨ NOUVELLE COLONNE : Entête */}
               <th>Genre</th>
               <th>Contrat / Heures</th>
               <th style={{ textAlign: 'right' }}>Actions</th>
@@ -119,6 +149,14 @@ export default function ListeSalaries({ onSelectEmploye }) {
                     <span style={{ fontWeight: '600', color: 'var(--primary-color)' }}>{emp.lastname || emp.nom}</span>
                   </div>
                 </td>
+                
+                {/* ✨ NOUVELLE COLONNE : Rendu du Poste */}
+                <td>
+                  <span style={{ background: 'var(--bg-color)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500' }}>
+                    {emp.posteNormalise}
+                  </span>
+                </td>
+
                 <td>
                   <span className="badge" style={{ 
                     background: emp.gender === 'man' || emp.genre === 'homme' ? '#e0f2fe' : '#fce7f3', 
@@ -142,7 +180,7 @@ export default function ListeSalaries({ onSelectEmploye }) {
             ))}
             {employesFiltres.length === 0 && (
               <tr>
-                <td colSpan="4" style={{ textAlign: 'center', padding: '3rem' }}>
+                <td colSpan="5" style={{ textAlign: 'center', padding: '3rem' }}>
                   <div style={{ fontSize: '2.5rem', opacity: 0.5, marginBottom: '1rem' }}>📭</div>
                   <div className="text-muted" style={{ fontWeight: '500' }}>Aucun salarié ne correspond à ces critères.</div>
                 </td>

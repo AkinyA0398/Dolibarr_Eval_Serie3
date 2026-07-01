@@ -1,19 +1,19 @@
 NewAPP
     BACKOFFICE
-        1. importer la colonne poste du fichier “import”
+        1. importer la colonne poste du fichier “import” [x]
         2. rajouter une table jour férié dans sqlite
         3. créer un CRUD pour les jours fériés
 
     FRONT OFFICE
-    1. créer une page pour générer le salaire de plusieurs salariés en même temps
+    1. créer une page pour générer le salaire de plusieurs salariés en même temps [x]
         - il y a filtre qui permet de choisir les salariés :
             . Poste
             . Genre
             . Heure de travail min et max
-    2. ensuite il y a un bouton générer salaire :
+    2. ensuite il y a un bouton générer salaire : [x]
             . date début et date fin
             . montant
-        cela va générer le salaire de tous les employés sélectionnés par le filtre
+        cela va générer le salaire de tous les employés sélectionnés par le filtre [x]
     3. créer une page “liste salariés”, sans filtre
         - créer un  lien pour chaque salairé, qui va afficher :
             . les infos du salarié
