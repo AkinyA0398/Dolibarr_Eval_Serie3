@@ -14,7 +14,7 @@ NewAPP
             . date début et date fin
             . montant
         cela va générer le salaire de tous les employés sélectionnés par le filtre [x]
-    3. créer une page “liste salariés”, sans filtre
+    3. créer une page “liste salariés”, sans filtre [x]
         - créer un  lien pour chaque salairé, qui va afficher :
             . les infos du salarié
             . un tableau historique des salaires et les paiements correspondant

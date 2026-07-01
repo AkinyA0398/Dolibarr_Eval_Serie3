@@ -1,164 +1,178 @@
 // src/pages/frontoffice/GestionSalaire.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { apiDolibarr } from '../../api/apiDolibarr';
 
+// --- Formateurs Utilitaires ---
+const formatMontant = (val) =>
+  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(val) || 0);
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return '—';
+  if (!isNaN(dateStr)) return new Date(Number(dateStr) * 1000).toLocaleDateString('fr-FR');
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('fr-FR');
+};
+
 export default function GestionSalaire({ employe, onBack }) {
-  const [montantTotal, setMontantTotal] = useState('');
-  const [dateDebut, setDateDebut] = useState('');
-  const [dateFin, setDateFin] = useState('');
-  
-  // États pour les versements multiples instantanés ou successifs
-  const [versements, setVersements] = useState([{ date: new Date().toLocaleDateString('fr-FR'), montant: '' }]);
+  const [salaires, setSalaires] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const addVersementField = () => {
-    setVersements([...versements, { date: new Date().toLocaleDateString('fr-FR'), montant: '' }]);
-  };
+  const empId = employe.id || employe.rowid || employe.ref_employe;
+  const nomComplet = `${employe.lastname || employe.nom || ''} ${employe.firstname || ''}`.trim() || `Employé #${empId}`;
 
-  const handleVersementChange = (index, field, value) => {
-    const updated = [...versements];
-    updated[index][field] = field === 'montant' ? parseFloat(value) || '' : value;
-    setVersements(updated);
-  };
-
-  const calculateTotalVerse = () => {
-    return versements.reduce((sum, v) => sum + (Number(v.montant) || 0), 0);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const totalVerse = calculateTotalVerse();
-    const totalDu = parseFloat(montantTotal);
-
-    if (!totalDu || totalDu <= 0) {
-      alert("Veuillez entrer un montant de salaire valide.");
-      return;
-    }
-
-    if (totalVerse > totalDu) {
-      alert(`Attention, le total versé (${totalVerse}€) dépasse le montant du salaire (${totalDu}€).`);
-      return;
-    }
-
-    const payload = {
-      ref_employe: employe.id || employe.ref_employe,
-      date_debut: dateDebut,
-      date_fin: dateFin,
-      montant: totalDu,
-      paiements: versements.filter(v => v.montant > 0) // On n'envoie que les lignes valides
+  useEffect(() => {
+    const loadFichesSalaire = async () => {
+      try {
+        const allSalaires = await apiDolibarr.getSalaires();
+        // Filtrage strict sur l'ID du salarié sélectionné
+        const fichesFiltrees = (allSalaires || []).filter(
+          s => String(s.fk_user || s.ref_employe) === String(empId)
+        );
+        setSalaires(fichesFiltrees);
+      } catch (error) {
+        console.error("Erreur lors du chargement des salaires de l'employé :", error);
+      } finally {
+        setLoading(false);
+      }
     };
+    loadFichesSalaire();
+  }, [empId]);
 
-    try {
-      await apiDolibarr.createSalaire(payload);
-      alert(`Fiche de salaire et historique des paiements synchronisés avec Dolibarr (Reste à payer : ${totalDu - totalVerse}€)`);
-      onBack();
-    } catch (err) {
-      alert("Erreur lors de l'enregistrement du salaire.");
-    }
-  };
+  // --- Calculs de Synthèse Financière ---
+  const totalDu = salaires.reduce((acc, s) => acc + (Number(s.amount || s.montant) || 0), 0);
+  
+  const totalVerse = salaires.reduce((acc, s) => {
+    const paiements = Array.isArray(s.paiements) ? s.paiements : [];
+    return acc + paiements.reduce((a, p) => a + (Number(p.montant) || 0), 0);
+  }, 0);
 
-  const resteAPayer = (parseFloat(montantTotal) || 0) - calculateTotalVerse();
+  const resteAPayerGlobal = totalDu - totalVerse;
+
+  if (loading) return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
+      <p style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>⏳ Analyse du dossier financier...</p>
+    </div>
+  );
 
   return (
-    <div className="animate-fade-in" style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <button onClick={onBack} className="btn btn-secondary mb-4" style={{ borderRadius: 'var(--radius-xl)' }}>
+    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '1rem' }} className="animate-fade-in">
+      
+      {/* Retour Annuaire */}
+      <button onClick={onBack} className="btn btn-secondary btn-sm" style={{ marginBottom: '1.5rem' }}>
         ← Retour à l'annuaire
       </button>
-      
-      <div className="card">
-        <div className="card-header">
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            Rémunération : {employe.lastname || employe.nom}
-          </h2>
-          <p className="text-sm text-muted">Édition de la fiche de salaire et enregistrement des versements</p>
+
+      {/* 1. Informations du Salarié */}
+      <div className="card" style={{ padding: '1.5rem', marginBottom: '1.5rem', borderLeft: '4px solid var(--accent-color)' }}>
+        <h2 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--primary-color)' }}>{nomComplet}</h2>
+        <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', fontSize: '0.9rem' }}>
+          <div>
+            <span style={{ color: 'var(--text-secondary)' }}>💼 Poste :</span> <strong>{employe.posteNormalise || employe.job || 'Non spécifié'}</strong>
+          </div>
+          <div>
+            <span style={{ color: 'var(--text-secondary)' }}>👤 Genre :</span> <span>{employe.gender === 'woman' || employe.genre === 'femme' ? 'Femme' : 'Homme'}</span>
+          </div>
+          <div>
+            <span style={{ color: 'var(--text-secondary)' }}>🆔 ID Dolibarr :</span> <code>#{empId}</code>
+          </div>
+          <div>
+            <span style={{ color: 'var(--text-secondary)' }}>🔑 Identifiant :</span> <strong>{employe.login || employe.identifiant || '—'}</strong>
+          </div>
         </div>
-        
-        <form onSubmit={handleSubmit}>
-          {/* Période de paie */}
-          <div className="flex gap-4 mb-4">
-            <div className="w-full">
-              <label>Période du</label>
-              <input type="date" value={dateDebut} onChange={e => setDateDebut(e.target.value)} required />
-            </div>
-            <div className="w-full">
-              <label>Période au</label>
-              <input type="date" value={dateFin} onChange={e => setDateFin(e.target.value)} required />
-            </div>
-          </div>
+      </div>
 
-          <div className="mb-4">
-            <label>Montant Total Échu (€)</label>
-            <input 
-              type="number" 
-              value={montantTotal} 
-              onChange={e => setMontantTotal(e.target.value)} 
-              placeholder="Ex: 1200" 
-              required 
-              style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--primary-color)' }}
-            />
+      {/* 2. Indicateur Reste à Payer & Synthèse */}
+      <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
+        <div className="card" style={{ flex: '1 1 240px', padding: '1.25rem', borderTop: `3px solid ${resteAPayerGlobal > 0 ? 'var(--danger-color)' : 'var(--success-color)'}` }}>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '600' }}>🛑 Montant Reste à Payer</div>
+          <div style={{ fontSize: '1.75rem', fontWeight: '700', color: resteAPayerGlobal > 0 ? 'var(--danger-color)' : 'var(--success-color)', marginTop: '0.25rem' }}>
+            {formatMontant(resteAPayerGlobal)}
           </div>
+        </div>
 
-          {/* Registre des versements */}
-          <div style={{ background: 'var(--bg-gradient-start)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '1.5rem', marginBottom: '1.5rem' }}>
-            <h4 style={{ marginBottom: '1rem', fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-               Registre des Versements
-            </h4>
-            
-            <table className="compact-table mb-4" style={{ background: 'transparent' }}>
-              <thead>
-                <tr>
-                  <th style={{ background: 'transparent', paddingLeft: 0 }}>Date de versement</th>
-                  <th style={{ background: 'transparent' }}>Montant versé (€)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {versements.map((v, idx) => (
-                  <tr key={idx} style={{ background: 'transparent' }}>
-                    <td style={{ paddingLeft: 0 }}>
-                      <input 
-                        type="text" 
-                        value={v.date} 
-                        onChange={e => handleVersementChange(idx, 'date', e.target.value)} 
-                        placeholder="JJ/MM/AAAA" 
-                      />
+        <div className="card" style={{ flex: '1 1 240px', padding: '1.25rem', borderTop: '3px solid var(--success-color)' }}>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '600' }}>✅ Total Déjà Versé</div>
+          <div style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--success-color)', marginTop: '0.25rem' }}>
+            {formatMontant(totalVerse)}
+          </div>
+        </div>
+
+        <div className="card" style={{ flex: '1 1 240px', padding: '1.25rem', borderTop: '3px solid var(--accent-color)' }}>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '600' }}>📊 Total Échu Cumulé</div>
+          <div style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '0.25rem' }}>
+            {formatMontant(totalDu)}
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Tableau Historique des Salaires et Paiements correspondants */}
+      <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>📋 Historique des bulletins & paiements associés</h3>
+      
+      {salaires.length === 0 ? (
+        <div className="card" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🍃</div>
+          <p>Aucune fiche de paie ou versement trouvé pour ce collaborateur.</p>
+        </div>
+      ) : (
+        <div className="card" style={{ padding: 0, overflowX: 'auto' }}>
+          <table className="compact-table" style={{ marginBottom: 0 }}>
+            <thead>
+              <tr>
+                <th style={{ paddingLeft: '1.25rem' }}>Fiche ID</th>
+                <th>Période / Date émission</th>
+                <th style={{ textAlign: 'right' }}>Montant Échu</th>
+                <th style={{ textAlign: 'right' }}>Total Réglé</th>
+                <th style={{ textAlign: 'right' }}>Solde Restant</th>
+                <th>Historique des Versements</th>
+              </tr>
+            </thead>
+            <tbody>
+              {salaires.map((sal) => {
+                const sId = sal.id || sal.rowid || sal.ref_salaire;
+                const montantFiche = Number(sal.amount || sal.montant) || 0;
+                const listPaiements = Array.isArray(sal.paiements) ? sal.paiements : [];
+                const totalPayeFiche = listPaiements.reduce((a, p) => a + (Number(p.montant) || 0), 0);
+                const resteFiche = montantFiche - totalPayeFiche;
+
+                return (
+                  <tr key={sId}>
+                    <td style={{ paddingLeft: '1.25rem', fontWeight: '700' }}>#{sId}</td>
+                    <td>{formatDate(sal.date_debut || sal.datep)} {sal.date_fin && `au ${formatDate(sal.date_fin)}`}</td>
+                    <td style={{ textAlign: 'right', fontWeight: '600' }}>{formatMontant(montantFiche)}</td>
+                    <td style={{ textAlign: 'right', color: 'var(--success-color)', fontWeight: '600' }}>{formatMontant(totalPayeFiche)}</td>
+                    <td style={{ 
+                      textAlign: 'right', 
+                      fontWeight: '700', 
+                      color: resteFiche > 0 ? 'var(--danger-color)' : 'var(--success-color)' 
+                    }}>
+                      {formatMontant(resteFiche)}
                     </td>
                     <td>
-                      <input 
-                        type="number" 
-                        value={v.montant} 
-                        onChange={e => handleVersementChange(idx, 'montant', e.target.value)} 
-                        placeholder="0.00" 
-                        style={{ fontWeight: '600', color: 'var(--success-color)' }}
-                      />
+                      {listPaiements.length === 0 ? (
+                        <span style={{ fontStyle: 'italic', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Aucun versement</span>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          {listPaiements.map((p, idx) => (
+                            <div key={idx} style={{ 
+                              fontSize: '0.8rem', 
+                              background: 'var(--bg-color)', 
+                              padding: '4px 8px', 
+                              borderRadius: '4px',
+                              borderLeft: '2px solid var(--success-color)'
+                            }}>
+                              📅 {p.date || formatDate(p.datep)} : <strong style={{ color: 'var(--success-color)' }}>+{formatMontant(p.montant)}</strong>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <button type="button" onClick={addVersementField} className="btn btn-secondary btn-sm" style={{ borderRadius: 'var(--radius-xl)' }}>
-              + Ajouter une ligne de paiement
-            </button>
-          </div>
-
-          {/* Synthèse financière */}
-          <div className="flex justify-between items-center mb-4" style={{ background: 'var(--surface-color)', padding: '1.25rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', borderLeft: '4px solid var(--accent-color)', boxShadow: 'var(--shadow-sm)' }}>
-            <div>
-              <span className="text-muted text-sm text-uppercase" style={{ letterSpacing: '0.05em', fontWeight: '600' }}>Total des versements saisis</span>
-              <div style={{ fontWeight: '800', fontSize: '1.25rem', color: 'var(--success-color)' }}>{calculateTotalVerse().toLocaleString()} €</div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <span className="text-muted text-sm text-uppercase" style={{ letterSpacing: '0.05em', fontWeight: '600' }}>Reste à payer</span>
-              <div style={{ fontWeight: '800', fontSize: '1.5rem', color: resteAPayer > 0 ? 'var(--danger-color)' : 'var(--success-color)' }}>
-                {resteAPayer.toLocaleString()} €
-              </div>
-            </div>
-          </div>
-
-          <button type="submit" className="btn btn-primary w-full" style={{ padding: '0.85rem', fontSize: '1.1rem', marginTop: '1rem' }}>
-            Valider et Synchroniser avec Dolibarr
-          </button>
-        </form>
-      </div>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

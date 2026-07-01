@@ -9,7 +9,7 @@ export default function ListeSalaries({ onSelectEmploye }) {
   // États pour la recherche multi-critères
   const [searchNom, setSearchNom] = useState('');
   const [searchGenre, setSearchGenre] = useState('tous');
-  const [searchPoste, setSearchPoste] = useState('tous'); // ✨ État pour le filtre poste
+  const [searchPoste, setSearchPoste] = useState('tous'); 
   const [searchHeures, setSearchHeures] = useState('');
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export default function ListeSalaries({ onSelectEmploye }) {
     const note = emp.note_private || '';
     
     const matchNom = nom.toLowerCase().includes(searchNom.toLowerCase());
-    const matchPoste = searchPoste === 'tous' || emp.posteNormalise === searchPoste; // ✨ Logique filtre poste
+    const matchPoste = searchPoste === 'tous' || emp.posteNormalise === searchPoste; 
     
     let matchGenre = true;
     if (searchGenre !== 'tous') {
@@ -96,7 +96,6 @@ export default function ListeSalaries({ onSelectEmploye }) {
           <input type="text" value={searchNom} onChange={e => setSearchNom(e.target.value)} placeholder="Saisir un nom..." />
         </div>
         
-        {/* ✨ NOUVEAU FILTRE : Sélection par Poste */}
         <div style={{ flex: '1 1 160px' }}>
           <label>💼 Poste / Métier</label>
           <select value={searchPoste} onChange={e => setSearchPoste(e.target.value)}>
@@ -126,7 +125,7 @@ export default function ListeSalaries({ onSelectEmploye }) {
           <thead>
             <tr>
               <th>Salarié</th>
-              <th>Poste</th> {/* ✨ NOUVELLE COLONNE : Entête */}
+              <th>Poste</th> 
               <th>Genre</th>
               <th>Contrat / Heures</th>
               <th style={{ textAlign: 'right' }}>Actions</th>
@@ -150,7 +149,6 @@ export default function ListeSalaries({ onSelectEmploye }) {
                   </div>
                 </td>
                 
-                {/* ✨ NOUVELLE COLONNE : Rendu du Poste */}
                 <td>
                   <span style={{ background: 'var(--bg-color)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500' }}>
                     {emp.posteNormalise}
@@ -169,11 +167,12 @@ export default function ListeSalaries({ onSelectEmploye }) {
                   {emp.note_private || `Base : ${emp.heure_travail_semaine || 35}h/sem`}
                 </td>
                 <td style={{ textAlign: 'right' }}>
+                  {/* ✨ LIEN : Déclenche l'affichage individuel */}
                   <button 
                     onClick={() => onSelectEmploye(emp)} 
                     className="btn btn-primary btn-sm"
                   >
-                    💳 Gérer Rémunération
+                    Fiche Employer
                   </button>
                 </td>
               </tr>
