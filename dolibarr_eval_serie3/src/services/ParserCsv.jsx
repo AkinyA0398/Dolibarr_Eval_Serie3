@@ -12,7 +12,8 @@ export const parseEmployes = (csvText) => {
       genre: values[2],
       identifiant: values[3],
       mdp: values[4],
-      heure_travail_semaine: parseInt(values[5])
+      heure_travail_semaine: parseInt(values[5]),
+      poste: values[6] ? values[6].trim() : '' // ✨ Ajout de la capture du poste
     };
   });
 };
