@@ -10,7 +10,7 @@ NewAPP (notre projet react actu) (à faire)
     - 1 fichier zip pour les images dans le dossier import
     - Dashboard pour afficher :
         - le montant de salaire par genre
-        - le montant de salaire par mois ( date de reglement comme reference)
+        - le montant de salaire par mois ( date debut salaire comme reference)
 
 
 => FrontOffice (à faire)
