@@ -4,19 +4,32 @@ import { apiDolibarr } from '../../api/apiDolibarr'; // Ajuste le chemin selon t
 export default function Reset() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  // Nouvel état pour gérer l'étape de confirmation intermédiaire
   const [showConfirmStep, setShowConfirmStep] = useState(false);
 
   const handleResetExecute = async () => {
     setLoading(true);
     setMessage('Purge des données en cours...');
-    setShowConfirmStep(false); // Cache les boutons de confirmation
+    setShowConfirmStep(false); 
 
     try {
-      console.log("⏳ Lancement de la purge sur l'API Dolibarr...");
+      // 1. ✨ ÉTAPE BACKEND LOCAL : Purge de la table SQLite jours_feries
+      console.log("⏳ Purge de la base locale SQLite (jours fériés)...");
+      const resLocal = await fetch('http://localhost:5000/api/reset-database', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (!resLocal.ok) {
+        throw new Error("Erreur lors de la réinitialisation de la base SQLite locale.");
+      }
+      console.log("✅ Base SQLite locale purgée.");
+
+      // 2. ÉTAPE API DOLIBARR & LOCALSTORAGE : Ton code actuel
+      console.log("⏳ Lancement de la purge sur l'API Dolibarr et LocalStorage...");
       await apiDolibarr.resetAllData();
-      console.log("✅ Purge réussie !");
-      setMessage('Succès : Toutes les données simulées ont été purgées avec succès.');
+      
+      console.log("✅ Purge globale réussie !");
+      setMessage('Succès : Toutes les données simulées et locales ont été purgées avec succès.');
     } catch (error) {
       console.error("❌ Erreur pendant le reset :", error);
       setMessage(`Erreur : ${error.message || 'Impossible de réinitialiser les données.'}`);
@@ -32,7 +45,7 @@ export default function Reset() {
           Reset Data
         </h2>
         <p className="text-muted" style={{ fontSize: '1.1rem', marginBottom: '2.5rem', maxWidth: '600px', margin: '0 auto 2.5rem auto' }}>
-          Cette action supprime définitivement toutes les fiches de salaires et tous les employés de test importés dans le système.
+          Cette action supprime définitivement toutes les fiches de salaires, les employés de test et les jours fériés de l'application.
         </p>
         
         {/* ÉTAPE 1 : Affichage du bouton initial */}

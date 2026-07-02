@@ -12,7 +12,6 @@ def init_db():
     cursor = conn.cursor()
     
     # Création de la table des jours fériés
-    # On stocke la date au format 'YYYY-MM-DD' pour faciliter les tris et requêtes SQLite
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS jours_feries (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -28,22 +27,41 @@ def init_db():
 init_db()
 
 
+# --- ROUTE DE PURGE INTERNE SÉCURISÉE ---
+
+@app.route('/api/reset-database', methods=['POST'])
+def reset_database():
+    try:
+        conn = sqlite3.connect(DATABASE_NAME)
+        cursor = conn.cursor()
+        
+        # On vide le contenu sans supprimer la table elle-même
+        cursor.execute("DELETE FROM jours_feries")
+        
+        # Réinitialisation des compteurs d'auto-incrémentation (ID)
+        cursor.execute("DELETE FROM sqlite_sequence WHERE name='jours_feries'")
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({"success": True, "message": "Table SQLite locale purgée avec succès."}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 # --- ROUTES API POUR LES JOURS FÉRIÉS ---
 
 @app.route('/api/jours-feries', methods=['GET'])
 def get_jours_feries():
     try:
         conn = sqlite3.connect(DATABASE_NAME)
-        # Permet de récupérer les résultats sous forme de dictionnaire clé-valeur
         conn.row_factory = sqlite3.Row 
         cursor = conn.cursor()
         
-        # Trié par date pour un affichage plus propre côté calendrier/tableau
         cursor.execute("SELECT * FROM jours_feries ORDER BY date_ferie ASC")
         rows = cursor.fetchall()
         conn.close()
         
-        # Conversion du format SQLite Row en liste de dictionnaires JSON
         jours = [dict(row) for row in rows]
         return jsonify(jours), 200
     except Exception as e:
@@ -54,7 +72,7 @@ def get_jours_feries():
 def add_jour_ferie():
     data = request.json
     titre = data.get('titre')
-    date_ferie = data.get('date_ferie') # Attendu au format 'YYYY-MM-DD'
+    date_ferie = data.get('date_ferie')
 
     if not titre or not date_ferie:
         return jsonify({"error": "Le titre et la date sont obligatoires."}), 400
