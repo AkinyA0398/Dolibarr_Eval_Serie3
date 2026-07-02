@@ -1,6 +1,65 @@
 // src/services/CrudService.jsx
 import { apiClient } from "../api/apiClient";
 
+const FLASK_API_URL = "http://localhost:5000/api";
+
+// =========================================================
+// GESTION DES JOURS FÉRIÉS (Backend Flask / SQLite local)
+// =========================================================
+
+/**
+ * Récupérer la liste complète des jours fériés (triés par date)
+ */
+export const getJoursFeries = async () => {
+  try {
+    const response = await fetch(`${FLASK_API_URL}/jours-feries`);
+    if (!response.ok) throw new Error("Impossible de charger les jours fériés.");
+    return await response.json();
+  } catch (error) {
+    console.error("Erreur lors de la récupération des jours fériés :", error);
+    throw error;
+  }
+};
+
+/**
+ * Ajouter un nouveau jour férié
+ * @param {Object} jourFerieData - ex: { titre: "Nouvel An", date_ferie: "2026-01-01" }
+ */
+export const createJourFerie = async (jourFerieData) => {
+  try {
+    const response = await fetch(`${FLASK_API_URL}/jours-feries`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(jourFerieData)
+    });
+    
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Échec de la création du jour férié.");
+    return data;
+  } catch (error) {
+    console.error("Erreur lors de la création du jour férié :", error);
+    throw error;
+  }
+};
+
+/**
+ * Supprimer un jour férié par son ID SQLite
+ */
+export const deleteJourFerie = async (id) => {
+  try {
+    const response = await fetch(`${FLASK_API_URL}/jours-feries/${id}`, {
+      method: 'DELETE'
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Échec de la suppression du jour férié.");
+    return data;
+  } catch (error) {
+    console.error(`Erreur lors de la suppression du jour férié ID ${id} :`, error);
+    throw error;
+  }
+};
+
+
 // =========================================================
 // GESTION DES EMPLOYÉS / UTILISATEURS (Endpoints: /users)
 // =========================================================
@@ -29,9 +88,8 @@ export const createEmploye = async (employeData) => {
       firstname: employeData.prenom || '',
       gender: employeData.genre === 'homme' ? 'man' : 'woman',
       password: employeData.mdp,
-      job: employeData.poste, // 👈 Doit être une chaîne (ex: "Comptable")
+      job: employeData.poste, 
       statut: 1, 
-      // En secours, on l'écrit en dur dans la note privée
       note_private: `Ref externe: ${employeData.ref_employe}, Poste: ${employeData.poste}, Heures/semaine: ${employeData.heure_travail_semaine}`
     };
 
@@ -89,7 +147,6 @@ export const createSalaire = async (salaireData) => {
       date_start: salaireData.date_debut,
       date_end: salaireData.date_fin,
       amount: parseFloat(salaireData.montant),
-      // Tableau contenant le ou les paiements partiels : [{ date: "...", montant: ... }]
       payments: salaireData.paiements || [] 
     };
 
@@ -114,18 +171,15 @@ export const createSalaire = async (salaireData) => {
 export const uploadEmployeDocument = async (fileBlob, fileName, employeId) => {
   try {
     const formData = new FormData();
-
-    // Dolibarr requiert généralement le fichier, le nom du dossier cible et le module concerné
     formData.append('file', fileBlob, fileName);
     formData.append('filename', fileName);
-    formData.append('modulepart', 'user'); // Lié au module utilisateur/employé
-    formData.append('ref', employeId);     // Identifiant ou référence de la fiche cible
+    formData.append('modulepart', 'user');
+    formData.append('ref', employeId);
 
     return await apiClient('/documents/upload', {
       method: 'POST',
       body: formData,
       headers: {
-        // Laisser le navigateur configurer le Content-Type automatiquement pour le FormData
         'Content-Type': null 
       }
     });
@@ -156,7 +210,6 @@ export const purgeAllSalaires = async (onProgressLog) => {
       const id = sal.id || sal.rowid;
       if (!id) continue;
       
-      // Suppression individuelle de chaque fiche
       await apiClient(`/salaries/${id}`, { method: 'DELETE' });
       totalPurged++;
     }

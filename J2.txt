@@ -1,7 +1,7 @@
 NewAPP
     BACKOFFICE
         1. importer la colonne poste du fichier “import” [x]
-        2. rajouter une table jour férié dans sqlite
+        2. rajouter une table jour férié dans sqlite [x]
         3. créer un CRUD pour les jours fériés
 
     FRONT OFFICE

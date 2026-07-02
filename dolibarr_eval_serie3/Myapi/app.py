@@ -8,20 +8,16 @@ CORS(app)
 DATABASE_NAME = "dolibarr.db"
 
 def init_db():
-    conn = sqlite3.connect(DATABASE_NAME)
-    cursor = conn.cursor()
-    
-    # Création de la table des jours fériés
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS jours_feries (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            titre TEXT NOT NULL,
-            date_ferie TEXT NOT NULL UNIQUE
-        )
-    ''')
-    
-    conn.commit()
-    conn.close()
+    with sqlite3.connect(DATABASE_NAME) as conn:
+        cursor = conn.cursor()
+        # Création de la table des jours fériés
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS jours_feries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                titre TEXT NOT NULL,
+                date_ferie TEXT NOT NULL UNIQUE
+            )
+        ''')
 
 # Initialisation de la base au démarrage de l'application
 init_db()
@@ -32,37 +28,30 @@ init_db()
 @app.route('/api/reset-database', methods=['POST'])
 def reset_database():
     try:
-        conn = sqlite3.connect(DATABASE_NAME)
-        cursor = conn.cursor()
-        
-        # On vide le contenu sans supprimer la table elle-même
-        cursor.execute("DELETE FROM jours_feries")
-        
-        # Réinitialisation des compteurs d'auto-incrémentation (ID)
-        cursor.execute("DELETE FROM sqlite_sequence WHERE name='jours_feries'")
-        
-        conn.commit()
-        conn.close()
+        with sqlite3.connect(DATABASE_NAME) as conn:
+            cursor = conn.cursor()
+            # On vide le contenu sans supprimer la table elle-même
+            cursor.execute("DELETE FROM jours_feries")
+            # Réinitialisation des compteurs d'auto-incrémentation (ID)
+            cursor.execute("DELETE FROM sqlite_sequence WHERE name='jours_feries'")
         
         return jsonify({"success": True, "message": "Table SQLite locale purgée avec succès."}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-# --- ROUTES API POUR LES JOURS FÉRIÉS ---
+# --- ROUTES API POUR LES JOURS FÉRIÉS (CRUD) ---
 
 @app.route('/api/jours-feries', methods=['GET'])
 def get_jours_feries():
     try:
-        conn = sqlite3.connect(DATABASE_NAME)
-        conn.row_factory = sqlite3.Row 
-        cursor = conn.cursor()
-        
-        cursor.execute("SELECT * FROM jours_feries ORDER BY date_ferie ASC")
-        rows = cursor.fetchall()
-        conn.close()
-        
-        jours = [dict(row) for row in rows]
+        with sqlite3.connect(DATABASE_NAME) as conn:
+            conn.row_factory = sqlite3.Row 
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM jours_feries ORDER BY date_ferie ASC")
+            rows = cursor.fetchall()
+            jours = [dict(row) for row in rows]
+            
         return jsonify(jours), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -78,17 +67,13 @@ def add_jour_ferie():
         return jsonify({"error": "Le titre et la date sont obligatoires."}), 400
 
     try:
-        conn = sqlite3.connect(DATABASE_NAME)
-        cursor = conn.cursor()
-        
-        cursor.execute(
-            "INSERT INTO jours_feries (titre, date_ferie) VALUES (?, ?)",
-            (titre, date_ferie)
-        )
-        
-        conn.commit()
-        new_id = cursor.lastrowid
-        conn.close()
+        with sqlite3.connect(DATABASE_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO jours_feries (titre, date_ferie) VALUES (?, ?)",
+                (titre, date_ferie)
+            )
+            new_id = cursor.lastrowid
         
         return jsonify({
             "message": "Jour férié ajouté avec succès !",
@@ -99,6 +84,24 @@ def add_jour_ferie():
         
     except sqlite3.IntegrityError:
         return jsonify({"error": "Cette date est déjà enregistrée comme jour férié."}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/jours-feries/<int:id>', methods=['DELETE'])
+def delete_jour_ferie(id):
+    try:
+        with sqlite3.connect(DATABASE_NAME) as conn:
+            cursor = conn.cursor()
+            
+            # Vérifier si l'enregistrement existe avant de le supprimer (optionnel mais propre)
+            cursor.execute("SELECT id FROM jours_feries WHERE id = ?", (id,))
+            if not cursor.fetchone():
+                return jsonify({"error": "Ce jour férié n'existe pas."}), 404
+                
+            cursor.execute("DELETE FROM jours_feries WHERE id = ?", (id,))
+            
+        return jsonify({"success": True, "message": "Jour férié supprimé avec succès."}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
